@@ -10,11 +10,8 @@ WORKDIR /app
 COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
-# npm ci si lockfile présent, sinon npm install
-RUN if [ -f package-lock.json ]; then npm ci; \
-    elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
-    elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install --frozen-lockfile; \
-    else npm install; fi
+# Installation sans scripts lifecycle (postinstall géré manuellement plus bas)
+RUN npm install --ignore-scripts --no-audit --prefer-offline || npm install --ignore-scripts --no-audit
 
 # ── Étape 2 : Build de l'application ───────────────────────
 FROM node:20-alpine AS builder
