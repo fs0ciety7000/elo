@@ -3,6 +3,13 @@ const nextConfig = {
   // Mode standalone pour Docker (réduit la taille de l'image)
   output: "standalone",
 
+  // Autorise les Server Actions depuis le domaine de production (derrière Traefik)
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["elodie.fs0ciety.org", "localhost:3000"],
+    },
+  },
+
   // Ne pas bloquer le build sur les erreurs TS/ESLint en CI/Docker
   typescript: {
     ignoreBuildErrors: true,

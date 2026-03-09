@@ -323,17 +323,19 @@ export function OcrUploadForm() {
           />
         </div>
 
-        {/* Texte OCR brut (lecture seule) */}
-        {rawText && (
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">
-              Texte brut extrait (non modifiable)
-            </label>
-            <pre className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl p-3 overflow-auto whitespace-pre-wrap font-mono max-h-32">
-              {rawText}
-            </pre>
-          </div>
-        )}
+        {/* Notes au radiologue */}
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1.5">
+            Notes au radiologue
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            placeholder="Instructions particulières pour le radiologue..."
+            className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none resize-none focus:ring-2 focus:ring-medical-500 focus:border-medical-500 transition-all"
+          />
+        </div>
 
         {/* Urgence */}
         <div className="flex items-center gap-3">

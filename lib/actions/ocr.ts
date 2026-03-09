@@ -36,32 +36,114 @@ const EXAM_KEYWORDS: Record<string, string[]> = {
   "PET Scan": ["pet", "pet-scan", "tep"],
 };
 
+// ── Nettoyage du texte OCR (supprime les en-têtes boilerplate) ──
+function cleanOcrText(rawText: string): string {
+  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  // Patterns à ignorer : coordonnées cabinet, mentions légales, numéros
+  const boilerplatePatterns = [
+    /^\d{5}\s+\w+/,                        // Code postal + ville
+    /tél?[.:]\s*[\d\s.\-()]+$/i,           // Lignes de téléphone
+    /^\d{2}[\s.\-]\d{2}[\s.\-]\d{2}[\s.\-]\d{2}[\s.\-]\d{2}$/, // Numéro de téléphone
+    /faculté\s+de\s+médecine/i,
+    /médecine\s+générale/i,
+    /n°\s*rpps/i,
+    /sur\s+rendez[\s-]*vous/i,
+    /absent[e]?\s+le?\s+/i,
+    /membre\s+d.une\s+association/i,
+    /règlement\s+par\s+chèque/i,
+    /en\s+cas\s+d.urgence.+prière/i,
+    /prière\s+d.appeler/i,
+    /nam\s+\d+/i,
+    /^\d{10,}$/,                           // Codes barres / NAM
+    /^groupe\s+/i,
+    /place\s+de\s+l.é?glise/i,
+    /^docteur\s+[A-Z][a-zÀ-ÿ\-]+\s+[A-Z]/,  // Lignes d'en-tête médecin
+    /de\s+la\s+faculté/i,
+  ];
+
+  return lines
+    .filter((line) => !boilerplatePatterns.some((re) => re.test(line)))
+    .join("\n");
+}
+
 // ── Analyse heuristique du texte brut ────────────────────────
 function parseOcrText(rawText: string): ParsedPrescription {
+  const cleaned = cleanOcrText(rawText);
   const lowerText = rawText.toLowerCase();
+  const lowerCleaned = cleaned.toLowerCase();
 
-  // Détection du type d'examen
+  // Détection du type d'examen (cherche dans le texte complet)
   let examType = "Examen radiologique";
+  let examKeywordPos = -1;
   for (const [type, keywords] of Object.entries(EXAM_KEYWORDS)) {
-    if (keywords.some((kw) => lowerText.includes(kw))) {
-      examType = type;
-      break;
+    for (const kw of keywords) {
+      const pos = lowerText.indexOf(kw);
+      if (pos !== -1) {
+        examType = type;
+        examKeywordPos = pos;
+        break;
+      }
     }
+    if (examKeywordPos !== -1) break;
   }
 
   // Détection de l'urgence
-  const urgency = lowerText.includes("urgent") || lowerText.includes("urgence");
+  const urgency = lowerCleaned.includes("urgent") || lowerCleaned.includes("urgence");
 
-  // Extraction basique du médecin (pattern "Dr. Nom" ou "Docteur Nom")
-  const doctorMatch = rawText.match(/(?:Dr\.?|Docteur)\s+([A-Z][a-zÀ-ÿ]+(?:\s+[A-Z][a-zÀ-ÿ]+)?)/i);
+  // Extraction du médecin
+  const doctorMatch = rawText.match(/(?:Dr\.?|Docteur)\s+([A-Z][A-ZÀ-Ÿa-zÀ-ÿ\-]+(?:\s+[A-Z][A-ZÀ-Ÿa-zÀ-ÿ\-]+)?)/);
   const doctorName = doctorMatch ? doctorMatch[0] : "Médecin prescripteur";
+
+  // Extraction du motif/diagnostic : texte du texte nettoyé après le type d'examen
+  let diagnosis = "";
+  let examDetails = "";
+
+  const cleanedLines = cleaned.split("\n").filter(Boolean);
+  let foundExam = false;
+  const diagLines: string[] = [];
+
+  for (const line of cleanedLines) {
+    const lower = line.toLowerCase();
+    // Cherche la ligne contenant le type d'examen
+    if (!foundExam) {
+      const isExamLine = Object.values(EXAM_KEYWORDS)
+        .flat()
+        .some((kw) => lower.includes(kw));
+      if (isExamLine) {
+        foundExam = true;
+        // Prend le reste de la ligne après le mot-clé exam comme détails
+        const detail = line.replace(/^(IRM|Scanner|Radio\w*|Écho\w*|Mammo\w*|Scinti\w*|PET[\s-]?Scan?)\s*/i, "").trim();
+        if (detail) examDetails = detail;
+        continue;
+      }
+    } else {
+      // Ignore les lignes qui ressemblent à du bruit résiduel (date, numéro de patient court)
+      if (!/^\d{1,2}\/\d{2}\/\d{2,4}$/.test(line) && !/^\d{1,3}$/.test(line)) {
+        diagLines.push(line);
+      }
+    }
+  }
+
+  diagnosis = diagLines
+    .join(" ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    // Nettoie les artefacts OCR courants sur l'écriture manuscrite
+    .replace(/([a-z])\s+([a-z])/g, (_, a, b) => `${a} ${b}`)
+    .trim();
+
+  // Fallback : si rien trouvé après l'exam, prend le texte nettoyé complet
+  if (!diagnosis && cleaned.length > 20) {
+    diagnosis = cleaned.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim();
+  }
 
   return {
     examType,
-    examDetails: "",
-    diagnosis: "",
+    examDetails,
+    diagnosis,
     doctorName,
-    notes: rawText.trim(),
+    notes: "",
     urgency,
   };
 }

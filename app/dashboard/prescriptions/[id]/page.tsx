@@ -10,6 +10,8 @@ import { formatDate, STATUS_LABELS, STATUS_COLORS, ROLE_LABELS } from "@/lib/uti
 import { Role } from "@prisma/client";
 import { PrescriptionQrCode } from "@/components/prescriptions/PrescriptionQrCode";
 import { StatusUpdateForm } from "@/components/prescriptions/StatusUpdateForm";
+import { PrescriptionEditForm } from "@/components/prescriptions/PrescriptionEditForm";
+import { DeletePrescriptionButton } from "@/components/prescriptions/DeletePrescriptionButton";
 import {
   FileText,
   ScanLine,
@@ -67,6 +69,12 @@ export default async function PrescriptionDetailPage({
   const isDoctor = session.role === Role.DOCTOR || session.role === Role.ADMIN;
   const canUpdateStatus = isDoctor;
 
+  // Peut modifier/supprimer : admin = tous, doctor = les siennes, patient = les siennes
+  const canEdit =
+    session.role === Role.ADMIN ||
+    (session.role === Role.DOCTOR && prescription.doctorId === session.id) ||
+    (session.role === Role.PATIENT && prescription.patientId === session.id);
+
   return (
     <div className="p-8 max-w-4xl">
       {/* ── En-tête ── */}
@@ -93,8 +101,8 @@ export default async function PrescriptionDetailPage({
             </p>
           </div>
 
-          {/* Statut + Urgence */}
-          <div className="flex items-center gap-2">
+          {/* Statut + Urgence + Actions */}
+          <div className="flex flex-wrap items-center gap-2">
             {prescription.urgency && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium">
                 <AlertTriangle className="w-4 h-4" />
@@ -106,6 +114,12 @@ export default async function PrescriptionDetailPage({
             >
               {STATUS_LABELS[prescription.status]}
             </span>
+            {canEdit && (
+              <>
+                <PrescriptionEditForm prescription={prescription} />
+                <DeletePrescriptionButton prescriptionId={prescription.id} />
+              </>
+            )}
           </div>
         </div>
       </div>
