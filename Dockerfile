@@ -55,6 +55,9 @@ COPY --from=builder /app/package.json ./package.json
 # Nécessaire pour : prisma migrate, tsx (seed), bcryptjs
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
+# Crée le répertoire uploads avec les bons droits avant de passer en non-root
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
+
 # Copie et rend exécutable le script d'entrypoint
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
