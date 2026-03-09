@@ -36,7 +36,7 @@ else
 fi
 
 # ── 3. Répertoire uploads ────────────────────────────────────
-mkdir -p /app/uploads && chmod 777 /app/uploads
+mkdir -p /app/uploads
 echo "📁 Répertoire uploads prêt"
 
 # ── 4. Démarrage de l'application ────────────────────────────
