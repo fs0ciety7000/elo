@@ -8,7 +8,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { logoutUser } from "@/lib/actions/auth";
 import { ROLE_LABELS } from "@/lib/utils";
-import { MobileNav } from "@/components/layout/MobileNav";
+import { MobileNav, type IconName } from "@/components/layout/MobileNav";
 import {
   Activity,
   LayoutDashboard,
@@ -22,18 +22,19 @@ import {
 import { Role } from "@prisma/client";
 
 // ── Liens de navigation selon le rôle ────────────────────────
-function getNavLinks(role: Role) {
-  const common = [
-    { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-    { href: "/dashboard/prescriptions", label: "Prescriptions", icon: FileText },
-    { href: "/dashboard/profile", label: "Mon profil", icon: User },
+// icon est un string (IconName) pour pouvoir être sérialisé vers le Client Component
+function getNavLinks(role: Role): { href: string; label: string; icon: IconName }[] {
+  const common: { href: string; label: string; icon: IconName }[] = [
+    { href: "/dashboard", label: "Tableau de bord", icon: "LayoutDashboard" },
+    { href: "/dashboard/prescriptions", label: "Prescriptions", icon: "FileText" },
+    { href: "/dashboard/profile", label: "Mon profil", icon: "User" },
   ];
 
   if (role === Role.PATIENT) {
     common.splice(2, 0, {
       href: "/dashboard/upload",
       label: "Numériser une ordonnance",
-      icon: ScanLine,
+      icon: "ScanLine",
     });
   }
 
@@ -41,17 +42,20 @@ function getNavLinks(role: Role) {
     common.splice(2, 0, {
       href: "/dashboard/prescriptions/new",
       label: "Nouvelle prescription",
-      icon: FileText,
+      icon: "FileText",
     });
     common.splice(2, 0, {
       href: "/dashboard/patients",
       label: "Patients",
-      icon: Users,
+      icon: "Users",
     });
   }
 
   return common;
 }
+
+// Résolution icône pour la sidebar server-side
+const ICON_COMPONENTS = { LayoutDashboard, FileText, ScanLine, User, Users } as const;
 
 // ── Composant Layout ─────────────────────────────────────────
 export default async function DashboardLayout({
@@ -74,7 +78,6 @@ export default async function DashboardLayout({
         navLinks={navLinks}
         userName={`${session.firstName} ${session.lastName}`}
         userRole={ROLE_LABELS[session.role]}
-        logoutAction={logoutUser}
       />
 
       {/* ── Sidebar desktop ── */}
@@ -93,17 +96,20 @@ export default async function DashboardLayout({
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600
-                hover:bg-zinc-50 hover:text-zinc-900 transition-all group"
-            >
-              <link.icon className="w-4 h-4 text-zinc-400 group-hover:text-medical-600 transition-colors flex-shrink-0" />
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const Icon = ICON_COMPONENTS[link.icon];
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600
+                  hover:bg-zinc-50 hover:text-zinc-900 transition-all group"
+              >
+                <Icon className="w-4 h-4 text-zinc-400 group-hover:text-medical-600 transition-colors flex-shrink-0" />
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Info utilisateur + déconnexion */}

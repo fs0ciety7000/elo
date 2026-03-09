@@ -1,8 +1,4 @@
-// ============================================================
-// API Route — Déconnexion
-// Supprime le cookie de session et redirige vers /login
-// ============================================================
-
+// POST /api/auth/logout — déconnexion via API route (pour le drawer mobile)
 import { NextResponse } from "next/server";
 import { clearSessionCookie } from "@/lib/auth";
 
