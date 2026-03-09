@@ -241,3 +241,23 @@ export async function getDoctors() {
     orderBy: { lastName: "asc" },
   });
 }
+
+// ── Sauvegarder les notes du médecin sur un patient ──────────
+export async function saveDoctorNotes(
+  patientId: string,
+  notes: string
+): Promise<ActionResult> {
+  try {
+    const session = await requireDoctorOrAdmin();
+    await prisma.doctorPatient.upsert({
+      where: { doctorId_patientId: { doctorId: session.id, patientId } },
+      update: { notes },
+      create: { doctorId: session.id, patientId, notes },
+    });
+    revalidatePath(`/dashboard/patients/${patientId}`);
+    return { success: true, message: "Notes sauvegardées" };
+  } catch (error) {
+    console.error("[saveDoctorNotes] Erreur :", error);
+    return { success: false, message: "Erreur lors de la sauvegarde" };
+  }
+}

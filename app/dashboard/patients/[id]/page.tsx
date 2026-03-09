@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { PatientFileEditForm } from "@/components/patients/PatientFileEditForm";
 import { AssignDoctorForm } from "@/components/patients/AssignDoctorForm";
+import { DoctorNotesForm } from "@/components/patients/DoctorNotesForm";
 import { getDoctors } from "@/lib/actions/patients";
 
 function InfoField({
@@ -207,6 +208,20 @@ export default async function PatientFilePage({
         {/* ── Colonne centrale : édition dossier ── */}
         <div className="space-y-4">
           <PatientFileEditForm patient={patient} />
+
+          {/* Notes privées du médecin */}
+          {session.role === Role.DOCTOR && (() => {
+            const doctorAssignment = patient.assignedDoctors.find(
+              (a) => a.doctorId === session.id
+            );
+            return (
+              <DoctorNotesForm
+                patientId={patient.id}
+                initialNotes={doctorAssignment?.notes ?? ""}
+                doctorName={`${session.firstName} ${session.lastName}`}
+              />
+            );
+          })()}
         </div>
 
         {/* ── Colonne droite : prescriptions ── */}

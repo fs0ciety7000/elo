@@ -122,6 +122,23 @@ export function OcrUploadForm() {
       formData.append("source", "OCR");
       formData.append("rawOcrText", rawText);
 
+      // Upload de la pièce jointe originale
+      if (selectedFile) {
+        try {
+          const uploadFd = new FormData();
+          uploadFd.append("file", selectedFile);
+          const uploadRes = await fetch("/api/upload", { method: "POST", body: uploadFd });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            formData.append("attachmentUrl", uploadData.url);
+            formData.append("attachmentName", uploadData.name);
+            formData.append("attachmentSize", String(uploadData.size));
+          }
+        } catch {
+          // Non bloquant : la prescription sera créée sans pièce jointe
+        }
+      }
+
       const result = await createPrescription(formData);
       if (result.success && result.data) {
         router.push(`/dashboard/prescriptions/${result.data.id}`);
