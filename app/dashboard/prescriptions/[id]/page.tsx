@@ -83,7 +83,7 @@ export default async function PrescriptionDetailPage({
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
                 {prescription.source === "OCR" ? (
                   <ScanLine className="w-4 h-4 text-zinc-600" />
                 ) : (
@@ -94,10 +94,10 @@ export default async function PrescriptionDetailPage({
                 {prescription.source === "OCR" ? "Numérisation OCR" : "Encodage manuel"}
               </span>
             </div>
-            <h1 className="font-display text-2xl font-bold text-zinc-900">
+            <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               {prescription.examType}
             </h1>
-            <p className="text-zinc-500 text-sm mt-1">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
               Prescription du {formatDate(prescription.createdAt)}
             </p>
           </div>
@@ -137,7 +137,7 @@ export default async function PrescriptionDetailPage({
               href={`/api/prescriptions/${prescription.id}/pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
             >
               <Download className="w-3.5 h-3.5" />
               PDF
@@ -150,8 +150,8 @@ export default async function PrescriptionDetailPage({
         {/* ── Colonne principale (2/3) ── */}
         <div className="md:col-span-2 space-y-4">
           {/* Informations médicales */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-6">
-            <h2 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
               <Info className="w-4 h-4 text-medical-600" />
               Détails de l&apos;examen
             </h2>
@@ -161,7 +161,7 @@ export default async function PrescriptionDetailPage({
                   <dt className="text-xs text-zinc-400 font-medium uppercase tracking-wide mb-1">
                     Détails techniques
                   </dt>
-                  <dd className="text-sm text-zinc-700">{prescription.examDetails}</dd>
+                  <dd className="text-sm text-zinc-700 dark:text-zinc-300">{prescription.examDetails}</dd>
                 </div>
               )}
               {prescription.diagnosis && (
@@ -169,7 +169,7 @@ export default async function PrescriptionDetailPage({
                   <dt className="text-xs text-zinc-400 font-medium uppercase tracking-wide mb-1">
                     Motif / Diagnostic
                   </dt>
-                  <dd className="text-sm text-zinc-700">{prescription.diagnosis}</dd>
+                  <dd className="text-sm text-zinc-700 dark:text-zinc-300">{prescription.diagnosis}</dd>
                 </div>
               )}
               {prescription.notes && (
@@ -177,7 +177,7 @@ export default async function PrescriptionDetailPage({
                   <dt className="text-xs text-zinc-400 font-medium uppercase tracking-wide mb-1">
                     Notes
                   </dt>
-                  <dd className="text-sm text-zinc-700">{prescription.notes}</dd>
+                  <dd className="text-sm text-zinc-700 dark:text-zinc-300">{prescription.notes}</dd>
                 </div>
               )}
               {prescription.scheduledDate && (
@@ -196,29 +196,29 @@ export default async function PrescriptionDetailPage({
 
           {/* Texte OCR brut (si applicable) */}
           {prescription.rawOcrText && (
-            <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-6">
-              <h2 className="font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-3 flex items-center gap-2">
                 <ScanLine className="w-4 h-4 text-medical-600" />
                 Texte extrait par OCR
               </h2>
-              <pre className="text-xs text-zinc-600 bg-zinc-50 p-4 rounded-lg border border-zinc-200 overflow-auto whitespace-pre-wrap font-mono">
+              <pre className="text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-auto whitespace-pre-wrap font-mono">
                 {prescription.rawOcrText}
               </pre>
             </div>
           )}
 
           {/* Personnes impliquées */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-6">
-            <h2 className="font-semibold text-zinc-900 mb-4">Intervenants</h2>
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Intervenants</h2>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-zinc-50 rounded-xl">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                   <User className="w-4 h-4 text-zinc-400" />
                   <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
                     Patient
                   </span>
                 </div>
-                <div className="font-semibold text-zinc-900 text-sm">
+                <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
                   {prescription.patient.firstName} {prescription.patient.lastName}
                 </div>
                 <div className="text-xs text-zinc-500">{prescription.patient.email}</div>
@@ -228,14 +228,14 @@ export default async function PrescriptionDetailPage({
               </div>
 
               {prescription.doctor && (
-                <div className="p-4 bg-zinc-50 rounded-xl">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
                     <Stethoscope className="w-4 h-4 text-zinc-400" />
                     <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
                       Médecin
                     </span>
                   </div>
-                  <div className="font-semibold text-zinc-900 text-sm">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
                     Dr. {prescription.doctor.firstName} {prescription.doctor.lastName}
                   </div>
                   {prescription.doctor.speciality && (
@@ -271,31 +271,45 @@ export default async function PrescriptionDetailPage({
           />
 
           {/* Métadonnées */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-4">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-4">
             <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">
               Métadonnées
             </h3>
             <dl className="space-y-2">
               <div>
                 <dt className="text-xs text-zinc-400">Référence</dt>
-                <dd className="text-xs font-mono text-zinc-600 break-all">{prescription.id}</dd>
+                <dd className="text-xs font-mono text-zinc-600 dark:text-zinc-400 break-all">{prescription.id}</dd>
               </div>
               <div>
                 <dt className="text-xs text-zinc-400">Créée le</dt>
-                <dd className="text-xs text-zinc-600">{formatDate(prescription.createdAt)}</dd>
+                <dd className="text-xs text-zinc-600 dark:text-zinc-400">{formatDate(prescription.createdAt)}</dd>
               </div>
               <div>
                 <dt className="text-xs text-zinc-400">Mise à jour</dt>
-                <dd className="text-xs text-zinc-600">{formatDate(prescription.updatedAt)}</dd>
+                <dd className="text-xs text-zinc-600 dark:text-zinc-400">{formatDate(prescription.updatedAt)}</dd>
               </div>
               {prescription.completedAt && (
                 <div>
                   <dt className="text-xs text-zinc-400">Complétée le</dt>
-                  <dd className="text-xs text-zinc-600">{formatDate(prescription.completedAt)}</dd>
+                  <dd className="text-xs text-zinc-600 dark:text-zinc-400">{formatDate(prescription.completedAt)}</dd>
                 </div>
               )}
             </dl>
           </div>
+
+          {/* Signature numérique SHA-256 */}
+          {(prescription as { hash?: string | null }).hash && (
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-4">
+              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                e-Prescription vérifiée
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Hash SHA-256</p>
+              <p className="text-[10px] font-mono text-zinc-500 dark:text-zinc-400 break-all leading-relaxed">
+                {(prescription as { hash?: string | null }).hash}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -11,9 +11,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createPrescription } from "@/lib/actions/prescriptions";
+import { createTemplate } from "@/lib/actions/templates";
 import { createPatientAccount } from "@/lib/actions/patients";
+import { TemplateSelector } from "./TemplateSelector";
 import {
-  Loader2, Save, Search, UserPlus, CheckCircle, X, ChevronRight,
+  Loader2, Save, Search, UserPlus, CheckCircle, X, ChevronRight, BookTemplate,
 } from "lucide-react";
 
 const EXAM_SUGGESTIONS = [
@@ -37,7 +39,12 @@ interface PatientResult {
   id: string; firstName: string; lastName: string; email: string;
 }
 
-export function NewPrescriptionForm() {
+interface Template {
+  id: string; name: string; examType: string; examDetails: string | null;
+  diagnosis: string | null; notes: string | null; urgency: boolean;
+}
+
+export function NewPrescriptionForm({ templates = [] }: { templates?: Template[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultEmail = searchParams.get("patientEmail") ?? "";
@@ -55,6 +62,9 @@ export function NewPrescriptionForm() {
   const [creatingPt, startCreatingPt] = useTransition();
   const [examSuggestions, setExamSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, startSavingTemplate] = useTransition();
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
@@ -119,6 +129,31 @@ export function NewPrescriptionForm() {
       const f = EXAM_SUGGESTIONS.filter((s) => s.toLowerCase().includes(e.target.value.toLowerCase()));
       setExamSuggestions(f); setShowSuggestions(f.length > 0);
     } else { setShowSuggestions(false); }
+  }
+
+  function applyTemplate(t: Template) {
+    setValue("examType", t.examType);
+    setValue("examDetails", t.examDetails ?? "");
+    setValue("diagnosis", t.diagnosis ?? "");
+    setValue("notes", t.notes ?? "");
+    setValue("urgency", t.urgency);
+  }
+
+  function handleSaveTemplate() {
+    const values = { examType: watch("examType"), examDetails: watch("examDetails"), diagnosis: watch("diagnosis"), notes: watch("notes"), urgency: watch("urgency") };
+    if (!templateName.trim() || !values.examType) return;
+    startSavingTemplate(async () => {
+      const fd = new FormData();
+      fd.append("name", templateName);
+      fd.append("examType", values.examType ?? "");
+      if (values.examDetails) fd.append("examDetails", values.examDetails);
+      if (values.diagnosis) fd.append("diagnosis", values.diagnosis);
+      if (values.notes) fd.append("notes", values.notes);
+      fd.append("urgency", String(values.urgency));
+      await createTemplate(fd);
+      setShowSaveTemplate(false);
+      setTemplateName("");
+    });
   }
 
   const onSubmit = (data: FormData) => {
@@ -236,6 +271,13 @@ export function NewPrescriptionForm() {
           )}
         </div>
 
+        {/* ── Templates ── */}
+        {templates.length > 0 && (
+          <div className="flex items-center gap-2">
+            <TemplateSelector templates={templates} onApply={applyTemplate} />
+          </div>
+        )}
+
         {/* ── Examen ── */}
         <div className="relative">
           <label className="block text-sm font-medium text-zinc-700 mb-2">Type d&apos;examen *</label>
@@ -273,6 +315,34 @@ export function NewPrescriptionForm() {
             <span className="block text-xs text-red-500 font-normal mt-0.5">L&apos;examen doit être réalisé dans les plus brefs délais</span>
           </label>
         </div>
+
+        {/* ── Sauvegarder comme modèle ── */}
+        {!showSaveTemplate ? (
+          <button type="button" onClick={() => setShowSaveTemplate(true)}
+            className="flex items-center gap-2 text-sm text-zinc-500 hover:text-medical-600 transition-colors">
+            <BookTemplate className="w-4 h-4" /> Sauvegarder comme modèle
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 p-3 bg-medical-50 dark:bg-medical-950/20 border border-medical-200 dark:border-medical-800 rounded-xl">
+            <BookTemplate className="w-4 h-4 text-medical-600 flex-shrink-0" />
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="Nom du modèle..."
+              className="flex-1 bg-transparent text-sm outline-none text-zinc-900 dark:text-zinc-100 placeholder-zinc-400"
+              autoFocus
+            />
+            <button type="button" onClick={handleSaveTemplate} disabled={savingTemplate || !templateName.trim()}
+              className="px-3 py-1 bg-medical-600 hover:bg-medical-700 disabled:bg-medical-400 text-white text-xs font-medium rounded-lg transition-all">
+              {savingTemplate ? <Loader2 className="w-3 h-3 animate-spin" /> : "Sauvegarder"}
+            </button>
+            <button type="button" onClick={() => { setShowSaveTemplate(false); setTemplateName(""); }}
+              className="text-zinc-400 hover:text-zinc-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         <button type="submit" disabled={isPending || !selectedPatient}
           className="w-full flex items-center justify-center gap-2 bg-medical-600 hover:bg-medical-700 disabled:bg-medical-400 text-white font-semibold py-3 rounded-xl transition-all">

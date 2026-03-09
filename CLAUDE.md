@@ -148,3 +148,28 @@ npm run lint             # ESLint
 - Les fichiers uploadés sont stockés localement (pas de S3) — à adapter si multi-instance
 - Pas de tests automatisés configurés
 - Les migrations Prisma sont gérées via `prisma migrate deploy` (pas `dev`) en production
+
+## Roadmap & Fonctionnalités à venir (Plan d'Action)
+
+Le développement a été divisé en 3 phases pour apporter un maximum de valeur tout en sécurisant l'existant :
+
+**Phase 1 - Les Fondations Sécurisées & UX rapide**
+- **Tests Automatisés E2E (Playwright) :** Couverture des parcours critiques (Authentification, Gestion Patient, Prescription Manuelle & OCR simulé). Sécurise les futurs développements.
+  - *[TODO POUR L'IA]* : Installer `playwright` (`npm init playwright@latest`), créer `playwright.config.ts`, et coder un test E2E `tests/login.spec.ts` et `tests/patient.spec.ts`.
+- **Recherche Globale (Cmd+K) :** Navigation ultra-rapide pour chercher patients et prescriptions n'importe où dans l'application via un raccourci clavier.
+  - *[TODO POUR L'IA]* : Ajouter `cmdk` via shadcn/ui (`npx shadcn-ui@latest add command`), créer `components/layout/CommandMenu.tsx` et une Route API `/api/search` faisant appel à Prisma.
+
+**Phase 2 - L'Évolution du cœur de métier**
+- **Modèles de Prescriptions (Templates) :** Nouveau modèle Prisma pour permettre au médecin de sauvegarder et appliquer en "1 clic" un set d'examens/médicaments habituels.
+  - *[TODO POUR L'IA]* : Modifier `schema.prisma` avec le modèle `PrescriptionTemplate` lié à `User`, jouer `npx prisma db push`, puis créer un bouton "Sauvegarder comme modèle" sur `NewPrescriptionForm`.
+- **e-Prescription (Signature Cryptographique) :** Sécurisation légale absolue de l'ordonnance PDF. Génération d'un hash SHA-256 (données document + médecin) vérifiable publiquement via la lecture du QR Code.
+  - *[TODO POUR L'IA]* : Ajouter un champ `hash` dans le modèle `Prescription` Prisma, et utiliser l'API Web Crypto pour hasher le contenu lors de l'appel `/api/prescriptions/create`.
+
+**Phase 3 - La Valeur Administrative & L'Écosystème**
+- **Dashboard Analytique & Journal d'Audit :** 
+  - *Journal d'Audit* pour les administrateurs (traçabilité RGPD via vue tableau dédiée).
+  - *[TODO POUR L'IA]* : Exploiter la table `AuditLog` et créer `app/dashboard/audit/[page]/page.tsx` avec des DataTables shadcn complètes pour les Rôles ADMIN.
+  - *Tableaux de bord cliniques* (KPIs, volume de prescriptions) à l'aide de graphiques `recharts`.
+  - *[TODO POUR L'IA]* : Installer `recharts`, et remplacer les cartes génériques du `/dashboard` par des LineCharts (historique prescriptions) et PieCharts (statuts).
+- **Interopérabilité Standard (Export HL7 / FHIR) :** Fonctionnalité d'export d'un dossier patient ou d'une prescription vers le format strict d'échange de santé mondial FHIR.
+  - *[TODO POUR L'IA]* : Créer un objet DTO Type `FHIR` dans `lib/utils/fhir.ts` mappant les données Prisma (`Patient`, `Prescription`) vers le format standardisé, puis créer la Route API d'export JSON.

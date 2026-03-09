@@ -98,24 +98,24 @@ export default async function PraticiensPage() {
       {/* En-tête */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center">
-            <Users className="w-4 h-4 text-zinc-600" />
+          <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+            <Users className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
           </div>
           <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Santé</span>
         </div>
-        <h1 className="font-display text-2xl font-bold text-zinc-900">Mes praticiens</h1>
-        <p className="text-zinc-500 text-sm mt-1">
+        <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">Mes praticiens</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
           Vos médecins et prestataires de soins assignés
         </p>
       </div>
 
       {/* Aucun praticien */}
       {assignments.length === 0 && prescriptionOnlyDoctors.length === 0 && uniqueFreeTextDoctors.length === 0 && (
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-12 text-center">
-          <div className="w-14 h-14 bg-zinc-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-12 text-center">
+          <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Stethoscope className="w-7 h-7 text-zinc-400" />
           </div>
-          <h2 className="font-semibold text-zinc-800 mb-2">Aucun praticien assigné</h2>
+          <h2 className="font-semibold text-zinc-800 dark:text-zinc-200 mb-2">Aucun praticien assigné</h2>
           <p className="text-sm text-zinc-500 max-w-sm mx-auto">
             Vos médecins apparaîtront ici lorsqu&apos;ils vous auront assigné à leur liste de patients ou que vous aurez renseigné leur nom sur une prescription.
           </p>
@@ -172,14 +172,14 @@ export default async function PraticiensPage() {
             {uniqueFreeTextDoctors.map((d) => (
               <div
                 key={d.prescribingDoctorName}
-                className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5"
+                className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
                     <Stethoscope className="w-5 h-5 text-zinc-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-zinc-900 text-sm">
+                    <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
                       Dr. {d.prescribingDoctorName}
                     </div>
                     <div className="text-xs text-zinc-400 mt-0.5">
@@ -224,14 +224,14 @@ function DoctorCard({
   linked?: boolean;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 space-y-4">
+    <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5 space-y-4">
       {/* En-tête */}
       <div className="flex items-start gap-3">
         <div className="w-11 h-11 rounded-xl gradient-medical flex items-center justify-center flex-shrink-0">
           <Stethoscope className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-zinc-900">
+          <div className="font-semibold text-zinc-900 dark:text-zinc-100">
             Dr. {doctor.firstName} {doctor.lastName}
           </div>
           {doctor.speciality && (
@@ -250,7 +250,7 @@ function DoctorCard({
       <div className="space-y-1.5">
         <a
           href={`mailto:${doctor.email}`}
-          className="flex items-center gap-2 text-xs text-zinc-500 hover:text-medical-600 transition-colors"
+          className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-medical-600 dark:hover:text-medical-400 transition-colors"
         >
           <Mail className="w-3.5 h-3.5 text-zinc-400" />
           {doctor.email}
@@ -258,7 +258,7 @@ function DoctorCard({
         {doctor.phone && (
           <a
             href={`tel:${doctor.phone}`}
-            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-medical-600 transition-colors"
+            className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 hover:text-medical-600 dark:hover:text-medical-400 transition-colors"
           >
             <Phone className="w-3.5 h-3.5 text-zinc-400" />
             {doctor.phone}
@@ -282,7 +282,7 @@ function DoctorCard({
 
       {/* Date de relation */}
       {since && (
-        <div className="flex items-center gap-1.5 text-xs text-zinc-400 pt-1 border-t border-zinc-50">
+        <div className="flex items-center gap-1.5 text-xs text-zinc-400 pt-1 border-t border-zinc-50 dark:border-zinc-700">
           <Calendar className="w-3 h-3" />
           Suivi depuis le {formatDate(since)}
         </div>

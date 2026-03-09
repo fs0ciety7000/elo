@@ -11,6 +11,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import type { ActionResult } from "./auth";
+import { sendPatientAccountCreatedEmail } from "@/lib/email/send";
 
 async function requireDoctorOrAdmin() {
   const session = await getSession();
@@ -224,6 +225,18 @@ export async function createPatientAccount(
     if (session.role === Role.DOCTOR) {
       await prisma.doctorPatient.create({ data: { doctorId: session.id, patientId: patient.id } });
     }
+
+    // Email de création de compte par le médecin (non bloquant)
+    const doctorName = session.role === Role.DOCTOR
+      ? `Dr. ${session.firstName} ${session.lastName}`
+      : "Antigravity Medical";
+    sendPatientAccountCreatedEmail(patient.email, {
+      patientName: `${patient.firstName} ${patient.lastName}`,
+      doctorName,
+      email: patient.email,
+      temporaryPassword: validation.data.password,
+    }).catch((err) => console.error("[createPatientAccount] Erreur email :", err));
+
     revalidatePath("/dashboard/patients");
     return { success: true, message: "Compte patient créé", data: { id: patient.id } };
   } catch (error) {

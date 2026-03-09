@@ -90,7 +90,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
         )}
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger asChild>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
               <Pencil className="w-3.5 h-3.5" />
               Modifier
             </button>
@@ -98,11 +98,11 @@ export function PrescriptionEditForm({ prescription }: Props) {
 
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-            <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl border border-zinc-100 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-700 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 max-h-[90vh] overflow-y-auto">
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 sticky top-0 bg-white rounded-t-2xl">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-700 sticky top-0 bg-white dark:bg-zinc-900 rounded-t-2xl">
                 <div>
-                  <Dialog.Title className="font-semibold text-zinc-900">
+                  <Dialog.Title className="font-semibold text-zinc-900 dark:text-zinc-100">
                     Modifier la prescription
                   </Dialog.Title>
                   <Dialog.Description className="text-xs text-zinc-500 mt-0.5">
@@ -110,7 +110,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
                   </Dialog.Description>
                 </div>
                 <Dialog.Close asChild>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-all">
+                  <button className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
                     <X className="w-4 h-4" />
                   </button>
                 </Dialog.Close>
@@ -127,7 +127,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
 
                 {/* Statut */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2">
                     Statut
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -139,7 +139,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
                         className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all
                           ${status === opt.value
                             ? `${opt.color} ring-2 ring-offset-1`
-                            : "border-zinc-200 text-zinc-500 bg-white hover:border-zinc-300"
+                            : "border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
                           }`}
                       >
                         {opt.icon}
@@ -159,7 +159,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
                       type="datetime-local"
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none focus:ring-2 focus:ring-medical-500 focus:border-medical-500 transition-all"
+                      className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-medical-500 focus:border-medical-500 transition-all"
                     />
                   </div>
                 )}
@@ -168,13 +168,13 @@ export function PrescriptionEditForm({ prescription }: Props) {
 
                 {/* Type d'examen */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                     Type d&apos;examen *
                   </label>
                   <select
                     value={EXAM_TYPES.includes(examType) ? examType : "Autre"}
                     onChange={(e) => setExamType(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none focus:ring-2 focus:ring-medical-500 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-medical-500 transition-all"
                   >
                     {EXAM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -184,14 +184,14 @@ export function PrescriptionEditForm({ prescription }: Props) {
                       value={examType}
                       onChange={(e) => setExamType(e.target.value)}
                       placeholder="Précisez le type d'examen…"
-                      className="mt-1.5 w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none focus:ring-2 focus:ring-medical-500 transition-all"
+                      className="mt-1.5 w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-medical-500 transition-all"
                     />
                   )}
                 </div>
 
                 {/* Motif */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                     Motif / Diagnostic
                   </label>
                   <textarea
@@ -199,13 +199,13 @@ export function PrescriptionEditForm({ prescription }: Props) {
                     onChange={(e) => setDiagnosis(e.target.value)}
                     rows={2}
                     placeholder="Motif de l'examen ou diagnostic…"
-                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
                   />
                 </div>
 
                 {/* Précisions techniques */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                     Précisions techniques
                   </label>
                   <textarea
@@ -213,13 +213,13 @@ export function PrescriptionEditForm({ prescription }: Props) {
                     onChange={(e) => setExamDetails(e.target.value)}
                     rows={2}
                     placeholder="Ex: avec injection de produit de contraste…"
-                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
                   />
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                     Notes au radiologue
                   </label>
                   <textarea
@@ -227,13 +227,13 @@ export function PrescriptionEditForm({ prescription }: Props) {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     placeholder="Informations complémentaires pour le radiologue…"
-                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none resize-none focus:ring-2 focus:ring-medical-500 transition-all"
                   />
                 </div>
 
                 {/* Médecin prescripteur */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5">
                     <span className="flex items-center gap-1.5">
                       <Stethoscope className="w-3.5 h-3.5" />
                       Médecin prescripteur
@@ -244,7 +244,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
                     value={doctorName}
                     onChange={(e) => setDoctorName(e.target.value)}
                     placeholder="Nom ou e-mail du médecin (lié automatiquement si inscrit)"
-                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm outline-none focus:ring-2 focus:ring-medical-500 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-medical-500 transition-all"
                   />
                   <p className="mt-1 text-xs text-zinc-400">
                     Si ce médecin est inscrit sur la plateforme, le lien sera établi automatiquement.
@@ -270,7 +270,7 @@ export function PrescriptionEditForm({ prescription }: Props) {
                   <Dialog.Close asChild>
                     <button
                       type="button"
-                      className="flex-1 px-4 py-2.5 border border-zinc-200 text-zinc-600 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-all"
+                      className="flex-1 px-4 py-2.5 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-xl text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
                     >
                       Annuler
                     </button>

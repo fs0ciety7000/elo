@@ -58,11 +58,12 @@ model User {
   updatedAt        DateTime @updatedAt
 
   // Relations
-  prescriptionsAsPatient  Prescription[]  @relation("PatientPrescriptions")
-  prescriptionsAsDoctor   Prescription[]  @relation("DoctorPrescriptions")
+  prescriptionsAsPatient  Prescription[]         @relation("PatientPrescriptions")
+  prescriptionsAsDoctor   Prescription[]         @relation("DoctorPrescriptions")
   auditLogs               AuditLog[]
-  assignedPatients        DoctorPatient[] @relation("DoctorAssignments")
-  assignedDoctors         DoctorPatient[] @relation("PatientAssignments")
+  assignedPatients        DoctorPatient[]        @relation("DoctorAssignments")
+  assignedDoctors         DoctorPatient[]        @relation("PatientAssignments")
+  prescriptionTemplates   PrescriptionTemplate[] @relation("DoctorTemplates")
 
   @@map("users")
 }
@@ -104,6 +105,9 @@ model Prescription {
   // Médecin prescripteur (libre si pas encore inscrit sur la plateforme)
   prescribingDoctorName String?  // Nom libre du médecin prescripteur
 
+  // Signature numérique (SHA-256 pour e-prescription)
+  hash            String?  // Hash SHA-256 du contenu de la prescription
+
   // Pièce jointe (fichier original uploadé)
   attachmentUrl   String?
   attachmentName  String?
@@ -142,4 +146,22 @@ model AuditLog {
   @@map("audit_logs")
   @@index([userId])
   @@index([createdAt])
+}
+
+// ── Templates de prescriptions (médecins) ────────────────────
+model PrescriptionTemplate {
+  id          String   @id @default(cuid())
+  name        String   // ex: "IRM Lombaire standard"
+  examType    String
+  examDetails String?
+  diagnosis   String?
+  notes       String?
+  urgency     Boolean  @default(false)
+  doctorId    String
+  doctor      User     @relation("DoctorTemplates", fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("prescription_templates")
+  @@index([doctorId])
 }

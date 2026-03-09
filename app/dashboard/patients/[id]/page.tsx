@@ -42,15 +42,15 @@ function InfoField({
 }) {
   if (!value) return null;
   return (
-    <div className={`flex items-start gap-3 p-3 rounded-xl ${alert ? "bg-red-50 border border-red-100" : "bg-zinc-50"}`}>
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${alert ? "bg-red-100" : "bg-white border border-zinc-200"}`}>
+    <div className={`flex items-start gap-3 p-3 rounded-xl ${alert ? "bg-red-50 border border-red-100" : "bg-zinc-50 dark:bg-zinc-900"}`}>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${alert ? "bg-red-100" : "bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"}`}>
         <Icon className={`w-4 h-4 ${alert ? "text-red-600" : "text-zinc-500"}`} />
       </div>
       <div>
-        <div className={`text-xs font-medium uppercase tracking-wide ${alert ? "text-red-500" : "text-zinc-400"}`}>
+        <div className={`text-xs font-medium uppercase tracking-wide ${alert ? "text-red-500" : "text-zinc-400 dark:text-zinc-500"}`}>
           {label}
         </div>
-        <div className={`text-sm font-medium mt-0.5 whitespace-pre-wrap ${alert ? "text-red-800" : "text-zinc-900"}`}>
+        <div className={`text-sm font-medium mt-0.5 whitespace-pre-wrap ${alert ? "text-red-800" : "text-zinc-900 dark:text-zinc-100"}`}>
           {value}
         </div>
       </div>
@@ -101,14 +101,14 @@ export default async function PatientFilePage({
       </div>
 
       {/* ── En-tête patient ── */}
-      <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm mb-6 p-5 sm:p-6">
+      <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 mb-6 p-5 sm:p-6">
         {/* Identité */}
         <div className="flex items-center gap-4 mb-5">
           <div className="w-14 h-14 rounded-2xl gradient-medical flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
             {initials}
           </div>
           <div className="min-w-0">
-            <h1 className="font-display text-lg sm:text-xl font-bold text-zinc-900 truncate">
+            <h1 className="font-display text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100 truncate">
               {patient.firstName} {patient.lastName}
             </h1>
             <p className="text-sm text-zinc-500 truncate">{patient.email}</p>
@@ -122,7 +122,7 @@ export default async function PatientFilePage({
         </div>
 
         {/* Stats rapides */}
-        <div className="grid grid-cols-4 gap-3 pt-4 border-t border-zinc-100">
+        <div className="grid grid-cols-4 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-700">
           {[
             { value: prescriptions.length, label: "Total", color: "text-zinc-900" },
             { value: pending.length, label: "En attente", color: "text-amber-600" },
@@ -143,8 +143,8 @@ export default async function PatientFilePage({
         <div className="space-y-4">
 
           {/* Infos de base */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-            <h2 className="font-semibold text-zinc-900 text-sm mb-3 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
               <User className="w-4 h-4 text-medical-600" /> Informations
             </h2>
             <div className="space-y-2">
@@ -159,8 +159,8 @@ export default async function PatientFilePage({
 
           {/* Dossier médical — alertes */}
           {(patient.allergies || patient.medicalHistory || patient.currentMeds) && (
-            <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-              <h2 className="font-semibold text-zinc-900 text-sm mb-3 flex items-center gap-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-red-500" /> Dossier médical
               </h2>
               <div className="space-y-2">
@@ -172,8 +172,8 @@ export default async function PatientFilePage({
           )}
 
           {/* Médecins assignés */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-            <h2 className="font-semibold text-zinc-900 text-sm mb-3 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
               <Stethoscope className="w-4 h-4 text-medical-600" /> Médecins traitants
             </h2>
             {patient.assignedDoctors.length === 0 ? (
@@ -181,8 +181,8 @@ export default async function PatientFilePage({
             ) : (
               <div className="space-y-2">
                 {patient.assignedDoctors.map((a) => (
-                  <div key={a.doctorId} className="flex items-center gap-2 text-sm text-zinc-700">
-                    <div className="w-7 h-7 rounded-lg bg-zinc-100 flex items-center justify-center text-xs font-bold">
+                  <div key={a.doctorId} className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                    <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center text-xs font-bold">
                       {a.doctor.firstName[0]}{a.doctor.lastName[0]}
                     </div>
                     <span>Dr. {a.doctor.firstName} {a.doctor.lastName}</span>
@@ -228,8 +228,8 @@ export default async function PatientFilePage({
         <div className="space-y-4">
           {/* Examens planifiés */}
           {scheduled.length > 0 && (
-            <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-              <h2 className="font-semibold text-zinc-900 text-sm mb-3 flex items-center gap-2">
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-blue-500" /> Examens planifiés
               </h2>
               <div className="space-y-2">
@@ -237,7 +237,7 @@ export default async function PatientFilePage({
                   <Link
                     key={p.id}
                     href={`/dashboard/prescriptions/${p.id}`}
-                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 transition-colors group"
+                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group"
                   >
                     <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex flex-col items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold text-blue-700 leading-none">
@@ -248,7 +248,7 @@ export default async function PatientFilePage({
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-zinc-900 truncate">{p.examType}</div>
+                      <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{p.examType}</div>
                       <div className="text-xs text-zinc-400">
                         {p.doctor ? `Dr. ${p.doctor.lastName}` : "—"}
                       </div>
@@ -261,9 +261,9 @@ export default async function PatientFilePage({
           )}
 
           {/* Historique des prescriptions */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-zinc-900 text-sm flex items-center gap-2">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm flex items-center gap-2">
                 <FileText className="w-4 h-4 text-zinc-500" /> Historique
               </h2>
               <Link
@@ -282,9 +282,9 @@ export default async function PatientFilePage({
                   <Link
                     key={p.id}
                     href={`/dashboard/prescriptions/${p.id}`}
-                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-zinc-50 transition-colors group"
+                    className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                       {p.status === "COMPLETED" ? (
                         <CheckCircle className="w-4 h-4 text-green-500" />
                       ) : p.status === "SCHEDULED" ? (
@@ -294,7 +294,7 @@ export default async function PatientFilePage({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-zinc-900 truncate">{p.examType}</div>
+                      <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{p.examType}</div>
                       <div className="text-xs text-zinc-400">{formatDate(p.createdAt)}</div>
                     </div>
                     <StatusBadge status={p.status} />

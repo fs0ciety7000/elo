@@ -11,6 +11,9 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { PrescriptionPdf } from "@/components/prescriptions/PrescriptionPdf";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -53,11 +56,14 @@ export async function GET(
     return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfBuffer = await renderToBuffer(
-    React.createElement(PrescriptionPdf, { prescription: prescription as Parameters<typeof PrescriptionPdf>[0]["prescription"] })
+    React.createElement(PrescriptionPdf as React.ComponentType<any>, {
+      prescription: prescription as Parameters<typeof PrescriptionPdf>[0]["prescription"],
+    })
   );
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="prescription-${prescription.id.slice(0, 8)}.pdf"`,

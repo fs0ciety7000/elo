@@ -5,6 +5,7 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { NewPrescriptionForm } from "@/components/prescriptions/NewPrescriptionForm";
 import { FileText } from "lucide-react";
@@ -14,10 +15,13 @@ export default async function NewPrescriptionPage() {
 
   if (!session) redirect("/login");
 
-  // Seuls les médecins et admins accèdent à cette page
-  if (session.role === Role.PATIENT) {
-    redirect("/dashboard");
-  }
+  if (session.role === Role.PATIENT) redirect("/dashboard");
+
+  const templates = await prisma.prescriptionTemplate.findMany({
+    where: { doctorId: session.id },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, examType: true, examDetails: true, diagnosis: true, notes: true, urgency: true },
+  });
 
   return (
     <div className="p-8 max-w-3xl">
@@ -28,10 +32,10 @@ export default async function NewPrescriptionPage() {
             <FileText className="w-5 h-5 text-medical-700" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold text-zinc-900">
+            <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               Nouvelle prescription
             </h1>
-            <p className="text-zinc-500 text-sm">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm">
               Encodez directement une demande d&apos;examen pour un patient
             </p>
           </div>
@@ -39,7 +43,7 @@ export default async function NewPrescriptionPage() {
       </div>
 
       {/* ── Formulaire ── */}
-      <NewPrescriptionForm />
+      <NewPrescriptionForm templates={templates} />
     </div>
   );
 }

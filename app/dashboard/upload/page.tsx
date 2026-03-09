@@ -28,10 +28,10 @@ export default async function UploadPage({
     <div className="p-8 max-w-2xl">
       {/* ── En-tête ── */}
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-zinc-900 mb-1">
+        <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-1">
           Soumettre une ordonnance
         </h1>
-        <p className="text-zinc-500 text-sm">
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm">
           Numérisez votre ordonnance ou saisissez-la manuellement
         </p>
       </div>
@@ -41,14 +41,14 @@ export default async function UploadPage({
 
       {/* ── Contenu selon le mode ── */}
       {isManual ? (
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 space-y-1">
+        <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6 space-y-1">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-medical-100 flex items-center justify-center">
               <PenLine className="w-5 h-5 text-medical-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-zinc-900">Saisie manuelle</h2>
-              <p className="text-xs text-zinc-500">Renseignez les informations de l&apos;ordonnance</p>
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">Saisie manuelle</h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Renseignez les informations de l&apos;ordonnance</p>
             </div>
           </div>
           <PatientManualForm />

@@ -21,8 +21,8 @@ export default async function NewPatientPage() {
             <UserPlus className="w-5 h-5 text-medical-700" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-bold text-zinc-900">Nouveau patient</h1>
-            <p className="text-zinc-500 text-sm">Créer un compte et une fiche patient</p>
+            <h1 className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">Nouveau patient</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm">Créer un compte et une fiche patient</p>
           </div>
         </div>
       </div>

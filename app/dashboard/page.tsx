@@ -44,15 +44,15 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-zinc-100 shadow-sm">
+    <div className="bg-white dark:bg-zinc-800 rounded-xl p-5 border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50">
       <div className="flex items-center justify-between mb-3">
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
           <Icon className="w-4 h-4 text-white" />
         </div>
         <TrendingUp className="w-4 h-4 text-zinc-300" />
       </div>
-      <div className="font-display text-2xl font-bold text-zinc-900">{value}</div>
-      <div className="text-xs text-zinc-500 mt-1">{label}</div>
+      <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">{value}</div>
+      <div className="text-xs text-zinc-500 dark:text-zinc-500 mt-1">{label}</div>
     </div>
   );
 }
@@ -91,9 +91,9 @@ function MiniCalendar({
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
+    <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-zinc-900 text-sm">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
           {MONTH_FR[month]} {year}
         </h2>
         <Calendar className="w-4 h-4 text-zinc-400" />
@@ -119,7 +119,7 @@ function MiniCalendar({
               className={`relative flex items-center justify-center h-8 rounded-lg text-xs font-medium transition-all cursor-default
                 ${isToday ? "bg-medical-600 text-white" : ""}
                 ${hasExam && !isToday ? "bg-blue-100 text-blue-700 font-semibold" : ""}
-                ${!isToday && !hasExam ? "text-zinc-600 hover:bg-zinc-50" : ""}
+                ${!isToday && !hasExam ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800" : ""}
               `}
             >
               {day}
@@ -131,7 +131,7 @@ function MiniCalendar({
         })}
       </div>
 
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-zinc-100">
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700">
         <div className="flex items-center gap-1.5 text-xs text-zinc-500">
           <div className="w-3 h-3 rounded-full bg-medical-600" />
           Aujourd&apos;hui
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-zinc-900">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               Bonjour, {session.firstName} 👋
             </h1>
             <p className="text-zinc-500 text-sm mt-1">
@@ -262,9 +262,9 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
         {/* ── Liste des prescriptions ── */}
-        <div className="xl:col-span-2 bg-white rounded-xl border border-zinc-100 shadow-sm">
-          <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
-            <h2 className="font-semibold text-zinc-900 text-sm sm:text-base">
+        <div className="xl:col-span-2 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50">
+          <div className="p-5 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">
               {isDoctor ? "Prescriptions récentes émises" : "Mes examens"}
             </h2>
             <Link
@@ -278,7 +278,7 @@ export default async function DashboardPage() {
           {prescriptions.length === 0 ? (
             <div className="p-10 text-center">
               <FileText className="w-10 h-10 text-zinc-200 mx-auto mb-3" />
-              <h3 className="font-medium text-zinc-700 mb-2 text-sm">Aucune prescription</h3>
+              <h3 className="font-medium text-zinc-700 dark:text-zinc-300 mb-2 text-sm">Aucune prescription</h3>
               <p className="text-xs text-zinc-400 mb-5">
                 {isDoctor
                   ? "Créez votre première prescription pour un patient."
@@ -293,14 +293,14 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-zinc-50">
+            <div className="divide-y divide-zinc-50 dark:divide-zinc-700">
               {prescriptions.slice(0, 8).map((prescription) => (
                 <Link
                   key={prescription.id}
                   href={`/dashboard/prescriptions/${prescription.id}`}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-zinc-50 transition-colors group"
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors group"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-zinc-100 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center flex-shrink-0">
                     {prescription.source === "OCR" ? (
                       <ScanLine className="w-4 h-4 text-zinc-500" />
                     ) : (
@@ -310,7 +310,7 @@ export default async function DashboardPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-medium text-zinc-900 text-sm truncate">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100 text-sm truncate">
                         {prescription.examType}
                       </span>
                       {prescription.urgency && (
@@ -343,8 +343,8 @@ export default async function DashboardPage() {
           <MiniCalendar scheduledDates={scheduledWithDates} />
 
           {/* Prochains examens */}
-          <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-            <h2 className="font-semibold text-zinc-900 text-sm mb-3 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
               Prochains examens (30j)
             </h2>
@@ -361,7 +361,7 @@ export default async function DashboardPage() {
                     <Link
                       key={exam.id}
                       href={`/dashboard/prescriptions/${exam.id}`}
-                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 transition-colors group"
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group"
                     >
                       <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-blue-50 border border-blue-100 flex flex-col items-center justify-center">
                         <span className="text-xs font-bold text-blue-700 leading-none">
@@ -372,12 +372,12 @@ export default async function DashboardPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-zinc-900 truncate">
+                        <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
                           {exam.examType}
                         </div>
                         <div className="text-xs text-zinc-400 truncate">
                           {exam.patientName && (
-                            <span className="font-medium text-zinc-500">{exam.patientName} · </span>
+                            <span className="font-medium text-zinc-500 dark:text-zinc-400">{exam.patientName} · </span>
                           )}
                           {d.toLocaleDateString("fr-BE", {
                             weekday: "short",

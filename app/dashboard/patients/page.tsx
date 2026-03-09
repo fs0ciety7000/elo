@@ -20,7 +20,7 @@ export default async function PatientsPage() {
     <div className="p-4 sm:p-8">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-display text-xl sm:text-2xl font-bold text-zinc-900 flex items-center gap-2">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
             <Users className="w-6 h-6 text-medical-600" />
             {session.role === Role.ADMIN ? "Tous les patients" : "Mes patients"}
           </h1>
@@ -38,9 +38,9 @@ export default async function PatientsPage() {
       </div>
 
       {patients.length === 0 ? (
-        <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-12 text-center">
+        <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-12 text-center">
           <Users className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
-          <h3 className="font-medium text-zinc-700 mb-2">Aucun patient</h3>
+          <h3 className="font-medium text-zinc-700 dark:text-zinc-300 mb-2">Aucun patient</h3>
           <p className="text-sm text-zinc-400 mb-6">
             {session.role === Role.ADMIN
               ? "Aucun patient enregistré."
@@ -65,14 +65,14 @@ export default async function PatientsPage() {
               <Link
                 key={patient.id}
                 href={`/dashboard/patients/${patient.id}`}
-                className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5 hover:shadow-md hover:border-medical-200 transition-all group"
+                className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5 hover:shadow-md hover:border-medical-200 dark:hover:border-medical-700 transition-all group"
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl gradient-medical flex items-center justify-center flex-shrink-0 text-white font-bold text-sm">
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-zinc-900 truncate group-hover:text-medical-700 transition-colors">
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate group-hover:text-medical-700 dark:group-hover:text-medical-400 transition-colors">
                       {patient.firstName} {patient.lastName}
                     </h3>
                     <p className="text-xs text-zinc-400 truncate">{patient.email}</p>
@@ -83,7 +83,7 @@ export default async function PatientsPage() {
                   <ArrowRight className="w-4 h-4 text-zinc-300 group-hover:text-medical-500 transition-colors flex-shrink-0 mt-1" />
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
                   <div className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5" />
                     {prescCount} prescription{prescCount !== 1 ? "s" : ""}

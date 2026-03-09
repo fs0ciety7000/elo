@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { signToken, setSessionCookie, clearSessionCookie } from "@/lib/auth";
 import { Role } from "@prisma/client";
+import { sendWelcomeEmail } from "@/lib/email/send";
 
 // ── Schémas de validation Zod ────────────────────────────────
 const RegisterSchema = z.object({
@@ -104,6 +105,11 @@ export async function registerUser(
         entityId: user.id,
       },
     });
+
+    // Email de bienvenue (non bloquant)
+    sendWelcomeEmail(user.email, { firstName: user.firstName, role: user.role }).catch(
+      (err) => console.error("[registerUser] Erreur email bienvenue :", err)
+    );
 
     // Création et pose du token de session
     const token = await signToken({

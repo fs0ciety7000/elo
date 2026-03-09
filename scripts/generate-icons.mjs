@@ -7,52 +7,80 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
 const src = join(publicDir, "logo.png");
 
-// ── Logo redimensionné avec fond aplati ───────────────────────
-async function resizedLogoFlattened(size, bgR, bgG, bgB) {
-  return sharp(src)
-    .resize(size, size, {
-      fit: "contain",
-      background: { r: bgR, g: bgG, b: bgB, alpha: 1 },
-    })
-    .flatten({ background: { r: bgR, g: bgG, b: bgB } })
+// ── Flatten finale : force RGB (3 canaux, 0 alpha) ────────────
+async function forceRgb(input, r, g, b) {
+  const buf = await (typeof input === "string"
+    ? sharp(input)
+    : sharp(input)
+  )
+    .flatten({ background: { r, g, b } })
+    .removeAlpha()
+    .png()
+    .toBuffer();
+  // Second pass to be absolutely sure
+  return sharp(buf)
+    .flatten({ background: { r, g, b } })
+    .removeAlpha()
     .png()
     .toBuffer();
 }
 
+// ── Logo redimensionné + fond aplati ─────────────────────────
+async function resizedLogo(size, bgR, bgG, bgB) {
+  const buf = await sharp(src)
+    .resize(size, size, {
+      fit: "contain",
+      background: { r: bgR, g: bgG, b: bgB, alpha: 255 },
+    })
+    .flatten({ background: { r: bgR, g: bgG, b: bgB } })
+    .removeAlpha()
+    .png()
+    .toBuffer();
+  return buf;
+}
+
 // ── Fond bleu + logo centré (PWA maskable) ────────────────────
 async function blueBgWithLogo(canvasSize, logoRatio = 0.72) {
+  const bgR = 37, bgG = 99, bgB = 235;
   const logoSize = Math.round(canvasSize * logoRatio);
   const offset   = Math.floor((canvasSize - logoSize) / 2);
-  const logoFlat = await resizedLogoFlattened(logoSize, 37, 99, 235);
+  const logoFlat = await resizedLogo(logoSize, bgR, bgG, bgB);
 
-  return sharp({
-    create: { width: canvasSize, height: canvasSize, channels: 3, background: { r: 37, g: 99, b: 235 } },
+  // Composite onto blue canvas
+  const composed = await sharp({
+    create: { width: canvasSize, height: canvasSize, channels: 4, background: { r: bgR, g: bgG, b: bgB, alpha: 255 } },
   })
     .composite([{ input: logoFlat, left: offset, top: offset }])
-    .flatten({ background: { r: 37, g: 99, b: 235 } })
-    .png();
+    .png()
+    .toBuffer();
+
+  // Force RGB — second pass removes any residual alpha
+  return sharp(await forceRgb(composed, bgR, bgG, bgB));
 }
 
 // ── Fond blanc + logo centré (apple touch / favicon) ──────────
 async function whiteBgWithLogo(canvasSize, logoRatio = 0.80) {
+  const bgR = 255, bgG = 255, bgB = 255;
   const logoSize = Math.round(canvasSize * logoRatio);
   const offset   = Math.floor((canvasSize - logoSize) / 2);
-  const logoFlat = await resizedLogoFlattened(logoSize, 255, 255, 255);
+  const logoFlat = await resizedLogo(logoSize, bgR, bgG, bgB);
 
-  return sharp({
-    create: { width: canvasSize, height: canvasSize, channels: 3, background: { r: 255, g: 255, b: 255 } },
+  const composed = await sharp({
+    create: { width: canvasSize, height: canvasSize, channels: 4, background: { r: bgR, g: bgG, b: bgB, alpha: 255 } },
   })
     .composite([{ input: logoFlat, left: offset, top: offset }])
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
-    .png();
+    .png()
+    .toBuffer();
+
+  return sharp(await forceRgb(composed, bgR, bgG, bgB));
 }
 
 // ── Génération ────────────────────────────────────────────────
 async function generate() {
-  await (await blueBgWithLogo(192)).toFile(join(publicDir, "icon-192.png"));
+  await (await whiteBgWithLogo(192)).toFile(join(publicDir, "icon-192.png"));
   console.log("✓ icon-192.png");
 
-  await (await blueBgWithLogo(512)).toFile(join(publicDir, "icon-512.png"));
+  await (await whiteBgWithLogo(512)).toFile(join(publicDir, "icon-512.png"));
   console.log("✓ icon-512.png");
 
   await (await whiteBgWithLogo(180)).toFile(join(publicDir, "apple-touch-icon.png"));

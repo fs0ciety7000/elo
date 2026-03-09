@@ -52,8 +52,8 @@ export function AnalyticsCharts({ monthly, examTypes }: Props) {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-6">
       {/* Bar chart : Prescriptions par mois */}
-      <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-        <h2 className="font-semibold text-zinc-900 text-sm mb-4">
+      <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-4">
           Activité des 6 derniers mois
         </h2>
         <ResponsiveContainer width="100%" height={220}>
@@ -88,12 +88,12 @@ export function AnalyticsCharts({ monthly, examTypes }: Props) {
       </div>
 
       {/* Pie chart : Répartition par type d'examen */}
-      <div className="bg-white rounded-xl border border-zinc-100 shadow-sm p-5">
-        <h2 className="font-semibold text-zinc-900 text-sm mb-4">
+      <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-4">
           Répartition par type d&apos;examen
         </h2>
         {examTypes.length === 0 ? (
-          <div className="flex items-center justify-center h-[220px] text-sm text-zinc-400">
+          <div className="flex items-center justify-center h-[220px] text-sm text-zinc-400 dark:text-zinc-500">
             Aucune donnée
           </div>
         ) : (

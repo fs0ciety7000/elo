@@ -9,7 +9,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -364,7 +363,7 @@ export function PrescriptionPdf({ prescription }: { prescription: PrescriptionDa
         {/* QR Code note */}
         <View style={styles.qrNote}>
           <Text style={styles.qrNoteText}>
-            Présentez le QR Code de cette prescription à l&apos;accueil du centre d&apos;imagerie le jour de votre examen.
+            Présentez le QR Code de cette prescription à l'accueil du centre d'imagerie le jour de votre examen.
           </Text>
           <Text style={styles.qrCode}>Ref. QR : {prescription.qrCode}</Text>
         </View>

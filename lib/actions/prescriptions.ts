@@ -5,12 +5,36 @@
 "use server";
 
 import { z } from "zod";
+import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Role, PrescriptionStatus } from "@prisma/client";
-import { sendPrescriptionEmail } from "@/lib/email/send";
+import { sendPrescriptionEmail, sendExamReminderEmail } from "@/lib/email/send";
 import type { ActionResult } from "./auth";
+
+function computePrescriptionHash(fields: {
+  id: string;
+  qrCode: string;
+  patientId: string;
+  doctorId?: string | null;
+  examType: string;
+  diagnosis?: string | null;
+  urgency: boolean;
+  createdAt: Date;
+}): string {
+  const payload = [
+    fields.id,
+    fields.qrCode,
+    fields.patientId,
+    fields.doctorId ?? "",
+    fields.examType,
+    fields.diagnosis ?? "",
+    String(fields.urgency),
+    fields.createdAt.toISOString(),
+  ].join("|");
+  return createHash("sha256").update(payload).digest("hex");
+}
 
 // ── Schéma de validation ──────────────────────────────────────
 const CreatePrescriptionSchema = z.object({
@@ -97,6 +121,19 @@ export async function createPrescription(
       include: { patient: true, doctor: true },
     });
 
+    // ── Hash SHA-256 e-prescription ───────────────────────────
+    const hash = computePrescriptionHash({
+      id: prescription.id,
+      qrCode: prescription.qrCode,
+      patientId: prescription.patientId,
+      doctorId: prescription.doctorId,
+      examType: prescription.examType,
+      diagnosis: prescription.diagnosis,
+      urgency: prescription.urgency,
+      createdAt: prescription.createdAt,
+    });
+    await prisma.prescription.update({ where: { id: prescription.id }, data: { hash } });
+
     await prisma.auditLog.create({
       data: {
         userId: session.id,
@@ -168,10 +205,10 @@ export async function updatePrescriptionStatus(
       },
     });
 
-    // Email lors de la planification
+    // Email de rappel lors de la planification
     if (status === "SCHEDULED" && updatedData.scheduledDate) {
       try {
-        await sendPrescriptionEmail(prescription.patient.email, {
+        await sendExamReminderEmail(prescription.patient.email, {
           patientName: `${prescription.patient.firstName} ${prescription.patient.lastName}`,
           doctorName: prescription.doctor
             ? `Dr. ${prescription.doctor.firstName} ${prescription.doctor.lastName}`
@@ -182,7 +219,7 @@ export async function updatePrescriptionStatus(
           scheduledDate: updatedData.scheduledDate,
         });
       } catch (emailError) {
-        console.error("[updatePrescriptionStatus] Erreur envoi email planification :", emailError);
+        console.error("[updatePrescriptionStatus] Erreur email rappel :", emailError);
       }
     }
 

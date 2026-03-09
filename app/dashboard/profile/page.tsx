@@ -32,15 +32,15 @@ function ProfileField({
   value: string | null | undefined;
 }) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
-      <div className="w-9 h-9 bg-white rounded-lg border border-zinc-200 flex items-center justify-center flex-shrink-0">
+    <div className="flex items-start gap-3 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl">
+      <div className="w-9 h-9 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
         <Icon className="w-4 h-4 text-zinc-500" />
       </div>
       <div>
         <div className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
           {label}
         </div>
-        <div className="text-sm font-medium text-zinc-900 mt-0.5">
+        <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mt-0.5">
           {value ?? "—"}
         </div>
       </div>
@@ -74,17 +74,17 @@ export default async function ProfilePage() {
     <div className="p-8 max-w-4xl">
       {/* ── En-tête ── */}
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold text-zinc-900">Mon profil</h1>
-        <p className="text-zinc-500 text-sm mt-1">
+        <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">Mon profil</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
           Vos informations personnelles et paramètres de compte
         </p>
       </div>
 
       {/* ── Card avatar + rôle ── */}
-      <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm mb-6 overflow-hidden">
+      <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 mb-6 overflow-hidden">
         <div className="h-24 gradient-medical" />
         <div className="px-8 pb-8 -mt-12">
-          <div className="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center mb-4">
+          <div className="w-20 h-20 rounded-2xl bg-white dark:bg-zinc-700 border-4 border-white dark:border-zinc-700 shadow-lg flex items-center justify-center mb-4">
             <div className="w-full h-full rounded-xl gradient-medical flex items-center justify-center">
               <span className="font-display text-2xl font-bold text-white">
                 {user.firstName[0]}{user.lastName[0]}
@@ -94,10 +94,10 @@ export default async function ProfilePage() {
 
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="font-display text-xl font-bold text-zinc-900">
+              <h2 className="font-display text-xl font-bold text-zinc-900 dark:text-zinc-100">
                 {user.firstName} {user.lastName}
               </h2>
-              <p className="text-zinc-500 text-sm">{user.email}</p>
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm">{user.email}</p>
 
               <div className="flex items-center gap-2 mt-3">
                 <span
@@ -105,7 +105,7 @@ export default async function ProfilePage() {
                     isAdmin
                       ? "bg-purple-50 text-purple-700 border-purple-200"
                       : isDoctor
-                      ? "bg-zinc-100 text-zinc-700 border-zinc-200"
+                      ? "bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600"
                       : "bg-medical-50 text-medical-700 border-medical-200"
                   }`}
                 >
@@ -128,7 +128,7 @@ export default async function ProfilePage() {
 
             <div className="flex gap-6 text-center">
               <div>
-                <div className="font-display text-2xl font-bold text-zinc-900">
+                <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                   {user._count.prescriptionsAsPatient}
                 </div>
                 <div className="text-xs text-zinc-400">
@@ -137,7 +137,7 @@ export default async function ProfilePage() {
               </div>
               {isDoctor && (
                 <div>
-                  <div className="font-display text-2xl font-bold text-zinc-900">
+                  <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                     {user._count.prescriptionsAsDoctor}
                   </div>
                   <div className="text-xs text-zinc-400">Émises</div>
@@ -150,8 +150,8 @@ export default async function ProfilePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* ── Informations personnelles (lecture) ── */}
-        <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
-          <h3 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
             <User className="w-4 h-4 text-medical-600" />
             Informations personnelles
           </h3>
@@ -182,8 +182,8 @@ export default async function ProfilePage() {
 
         {/* ── Informations pro (médecin) ── */}
         {isDoctor && (
-          <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
-            <h3 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
               <Stethoscope className="w-4 h-4 text-medical-600" />
               Informations professionnelles
             </h3>
@@ -201,8 +201,8 @@ export default async function ProfilePage() {
 
         {/* ── Activité (patient) ── */}
         {!isDoctor && (
-          <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
-            <h3 className="font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-medical-600" />
               Activité de votre compte
             </h3>
@@ -229,8 +229,8 @@ export default async function ProfilePage() {
       </div>
 
       {/* ── Actions du compte ── */}
-      <div className="mt-6 bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
-        <h3 className="font-semibold text-zinc-900 mb-4">Actions du compte</h3>
+      <div className="mt-6 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Actions du compte</h3>
         <div className="flex gap-3">
           <form action={logoutUser}>
             <button
