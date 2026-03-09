@@ -44,16 +44,42 @@ model User {
   speciality       String?  // Spécialité médicale (pour les DOCTOR)
   inami            String?  // Numéro INAMI (pour les DOCTOR)
   phone            String?
+  // Dossier patient
+  nationalId       String?  // Numéro de registre national
+  birthDate        DateTime?
+  address          String?
+  bloodType        String?  // Groupe sanguin
+  allergies        String?  // Liste des allergies
+  medicalHistory   String?  // Antécédents médicaux
+  currentMeds      String?  // Traitements en cours
+  emergencyContact String?  // Contact d'urgence
   emailVerified    Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   // Relations
-  prescriptionsAsPatient  Prescription[] @relation("PatientPrescriptions")
-  prescriptionsAsDoctor   Prescription[] @relation("DoctorPrescriptions")
+  prescriptionsAsPatient  Prescription[]  @relation("PatientPrescriptions")
+  prescriptionsAsDoctor   Prescription[]  @relation("DoctorPrescriptions")
   auditLogs               AuditLog[]
+  assignedPatients        DoctorPatient[] @relation("DoctorAssignments")
+  assignedDoctors         DoctorPatient[] @relation("PatientAssignments")
 
   @@map("users")
+}
+
+// ── Table de liaison médecin ↔ patient ───────────────────────
+model DoctorPatient {
+  id        String   @id @default(cuid())
+  doctorId  String
+  patientId String
+  doctor    User     @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient   User     @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([doctorId, patientId])
+  @@map("doctor_patients")
+  @@index([doctorId])
+  @@index([patientId])
 }
 
 // ── Table des prescriptions ──────────────────────────────────

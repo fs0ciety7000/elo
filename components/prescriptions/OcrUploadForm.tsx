@@ -48,28 +48,39 @@ export function OcrUploadForm() {
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setSelectedFile(file);
     setError(null);
-
-    // Prévisualisation de l'image
-    const reader = new FileReader();
-    reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  }
-
-  // ── Drag & Drop ──────────────────────────────────────────
-  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      if (fileInputRef.current) fileInputRef.current.files = dt.files;
-      setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
       reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  }
+
+  // ── Drag & Drop ──────────────────────────────────────────
+  const ALLOWED_TYPES = [
+    "image/jpeg", "image/jpg", "image/png", "image/webp",
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+  ];
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (!file || !ALLOWED_TYPES.includes(file.type)) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (fileInputRef.current) fileInputRef.current.files = dt.files;
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
     }
   }
 
@@ -152,19 +163,25 @@ export function OcrUploadForm() {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             onChange={handleFileSelect}
             className="hidden"
           />
 
-          {previewUrl ? (
+          {selectedFile ? (
             <div className="space-y-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={previewUrl}
-                alt="Aperçu de l'ordonnance"
-                className="max-h-64 mx-auto rounded-xl shadow-md object-contain"
-              />
+              {previewUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={previewUrl}
+                  alt="Aperçu de l'ordonnance"
+                  className="max-h-64 mx-auto rounded-xl shadow-md object-contain"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-zinc-100 flex items-center justify-center mx-auto">
+                  <Upload className="w-8 h-8 text-zinc-400" />
+                </div>
+              )}
               <div className="flex items-center justify-center gap-2 text-sm text-zinc-600">
                 <CheckCircle className="w-4 h-4 text-green-500" />
                 {selectedFile?.name} ({(selectedFile!.size / 1024 / 1024).toFixed(2)} Mo)
@@ -177,7 +194,7 @@ export function OcrUploadForm() {
                 }}
                 className="text-xs text-zinc-400 hover:text-zinc-600 flex items-center gap-1 mx-auto"
               >
-                <X className="w-3 h-3" /> Changer d&apos;image
+                <X className="w-3 h-3" /> Changer de fichier
               </button>
             </div>
           ) : (
@@ -193,7 +210,7 @@ export function OcrUploadForm() {
                   ou cliquez pour parcourir vos fichiers
                 </p>
                 <p className="text-xs text-zinc-300 mt-2">
-                  JPEG, PNG ou WebP · Max 10 Mo
+                  JPEG, PNG, WebP, PDF ou Word (.docx) · Max 20 Mo
                 </p>
               </div>
             </div>

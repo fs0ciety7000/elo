@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { logoutUser } from "@/lib/actions/auth";
 import { ROLE_LABELS } from "@/lib/utils";
+import { MobileNav } from "@/components/layout/MobileNav";
 import {
   Activity,
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
   User,
   LogOut,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { Role } from "@prisma/client";
 
@@ -24,7 +26,7 @@ function getNavLinks(role: Role) {
   const common = [
     { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
     { href: "/dashboard/prescriptions", label: "Prescriptions", icon: FileText },
-    { href: "/profile", label: "Mon profil", icon: User },
+    { href: "/dashboard/profile", label: "Mon profil", icon: User },
   ];
 
   if (role === Role.PATIENT) {
@@ -40,6 +42,11 @@ function getNavLinks(role: Role) {
       href: "/dashboard/prescriptions/new",
       label: "Nouvelle prescription",
       icon: FileText,
+    });
+    common.splice(2, 0, {
+      href: "/dashboard/patients",
+      label: "Patients",
+      icon: Users,
     });
   }
 
@@ -62,8 +69,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-zinc-50 flex">
-      {/* ── Sidebar ── */}
-      <aside className="w-64 bg-white border-r border-zinc-100 flex flex-col fixed top-0 left-0 h-full z-30">
+      {/* ── Navigation mobile (hamburger + drawer) ── */}
+      <MobileNav
+        navLinks={navLinks}
+        userName={`${session.firstName} ${session.lastName}`}
+        userRole={ROLE_LABELS[session.role]}
+        logoutAction={logoutUser}
+      />
+
+      {/* ── Sidebar desktop ── */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-zinc-100 flex-col fixed top-0 left-0 h-full z-30">
         {/* Logo */}
         <div className="p-6 border-b border-zinc-100">
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -93,7 +108,6 @@ export default async function DashboardLayout({
 
         {/* Info utilisateur + déconnexion */}
         <div className="p-4 border-t border-zinc-100">
-          {/* Badge rôle */}
           <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-zinc-50 rounded-lg">
             <ShieldCheck className="w-4 h-4 text-medical-600 flex-shrink-0" />
             <div className="min-w-0">
@@ -105,8 +119,6 @@ export default async function DashboardLayout({
               </div>
             </div>
           </div>
-
-          {/* Bouton déconnexion */}
           <form action={logoutUser}>
             <button
               type="submit"
@@ -120,7 +132,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* ── Contenu principal ── */}
-      <main className="flex-1 ml-64 min-h-screen">
+      <main className="flex-1 lg:ml-64 min-h-screen pt-14 lg:pt-0">
         {children}
       </main>
     </div>

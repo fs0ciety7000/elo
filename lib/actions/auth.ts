@@ -207,3 +207,64 @@ export async function logoutUser(): Promise<void> {
   await clearSessionCookie();
   redirect("/login");
 }
+
+// ── Schéma mise à jour profil ─────────────────────────────────
+const UpdateProfileSchema = z.object({
+  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
+  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  phone: z.string().optional(),
+  speciality: z.string().optional(),
+  inami: z.string().optional(),
+});
+
+// ── Action : Mise à jour du profil ────────────────────────────
+export async function updateProfile(
+  formData: FormData
+): Promise<ActionResult> {
+  const { getSession } = await import("@/lib/auth");
+  const session = await getSession();
+  if (!session) return { success: false, message: "Non authentifié" };
+
+  const rawData = {
+    firstName: formData.get("firstName") ?? undefined,
+    lastName: formData.get("lastName") ?? undefined,
+    phone: formData.get("phone") ?? undefined,
+    speciality: formData.get("speciality") ?? undefined,
+    inami: formData.get("inami") ?? undefined,
+  };
+
+  const validation = UpdateProfileSchema.safeParse(rawData);
+  if (!validation.success) {
+    return {
+      success: false,
+      message: "Données invalides",
+      errors: validation.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { id: session.id } });
+    if (!user) return { success: false, message: "Utilisateur introuvable" };
+
+    const isDoctor = user.role === Role.DOCTOR || user.role === Role.ADMIN;
+
+    await prisma.user.update({
+      where: { id: session.id },
+      data: {
+        firstName: validation.data.firstName,
+        lastName: validation.data.lastName,
+        phone: validation.data.phone || null,
+        speciality: isDoctor ? (validation.data.speciality || null) : undefined,
+        inami: isDoctor ? (validation.data.inami || null) : undefined,
+      },
+    });
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/dashboard/profile");
+
+    return { success: true, message: "Profil mis à jour avec succès" };
+  } catch (error) {
+    console.error("[updateProfile] Erreur :", error);
+    return { success: false, message: "Erreur lors de la mise à jour" };
+  }
+}
