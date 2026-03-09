@@ -100,46 +100,39 @@ export default async function PatientFilePage({
       </div>
 
       {/* ── En-tête patient ── */}
-      <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm mb-6 overflow-hidden">
-        <div className="h-16 gradient-medical" />
-        <div className="px-6 pb-6 -mt-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div className="flex items-end gap-4">
-            <div className="w-16 h-16 rounded-xl bg-white border-4 border-white shadow-lg gradient-medical flex items-center justify-center text-white font-bold text-lg">
-              {initials}
-            </div>
-            <div className="pb-1">
-              <h1 className="font-display text-xl font-bold text-zinc-900">
-                {patient.firstName} {patient.lastName}
-              </h1>
-              <p className="text-sm text-zinc-500">{patient.email}</p>
-              {patient.birthDate && (
-                <p className="text-xs text-zinc-400">
-                  Né(e) le {formatDate(patient.birthDate)} ·{" "}
-                  {Math.floor((Date.now() - new Date(patient.birthDate).getTime()) / (365.25 * 24 * 3600 * 1000))} ans
-                </p>
-              )}
-            </div>
+      <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm mb-6 p-5 sm:p-6">
+        {/* Identité */}
+        <div className="flex items-center gap-4 mb-5">
+          <div className="w-14 h-14 rounded-2xl gradient-medical flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+            {initials}
           </div>
+          <div className="min-w-0">
+            <h1 className="font-display text-lg sm:text-xl font-bold text-zinc-900 truncate">
+              {patient.firstName} {patient.lastName}
+            </h1>
+            <p className="text-sm text-zinc-500 truncate">{patient.email}</p>
+            {patient.birthDate && (
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Né(e) le {formatDate(patient.birthDate)} ·{" "}
+                {Math.floor((Date.now() - new Date(patient.birthDate).getTime()) / (365.25 * 24 * 3600 * 1000))} ans
+              </p>
+            )}
+          </div>
+        </div>
 
-          {/* Stats rapides */}
-          <div className="flex gap-4 pb-1 text-center">
-            <div>
-              <div className="font-bold text-lg text-zinc-900">{prescriptions.length}</div>
-              <div className="text-xs text-zinc-400">Total</div>
+        {/* Stats rapides */}
+        <div className="grid grid-cols-4 gap-3 pt-4 border-t border-zinc-100">
+          {[
+            { value: prescriptions.length, label: "Total", color: "text-zinc-900" },
+            { value: pending.length, label: "En attente", color: "text-amber-600" },
+            { value: scheduled.length, label: "Planifiés", color: "text-blue-600" },
+            { value: completed.length, label: "Terminés", color: "text-green-600" },
+          ].map((stat) => (
+            <div key={stat.label} className="text-center">
+              <div className={`font-bold text-xl ${stat.color}`}>{stat.value}</div>
+              <div className="text-xs text-zinc-400 mt-0.5">{stat.label}</div>
             </div>
-            <div>
-              <div className="font-bold text-lg text-amber-600">{pending.length}</div>
-              <div className="text-xs text-zinc-400">En attente</div>
-            </div>
-            <div>
-              <div className="font-bold text-lg text-blue-600">{scheduled.length}</div>
-              <div className="text-xs text-zinc-400">Planifiés</div>
-            </div>
-            <div>
-              <div className="font-bold text-lg text-green-600">{completed.length}</div>
-              <div className="text-xs text-zinc-400">Terminés</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
