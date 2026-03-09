@@ -11,7 +11,7 @@ COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
 # Installation sans scripts lifecycle (postinstall géré manuellement plus bas)
-RUN npm install --ignore-scripts --no-audit --prefer-offline || npm install --ignore-scripts --no-audit
+RUN npm install --ignore-scripts --no-audit --legacy-peer-deps
 
 # ── Étape 2 : Build de l'application ───────────────────────
 FROM node:20-alpine AS builder
