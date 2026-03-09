@@ -6,6 +6,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 
 // ── Polices Google Fonts ─────────────────────────────────────
 const inter = Inter({
@@ -32,8 +33,18 @@ export const metadata: Metadata = {
   authors: [{ name: "Antigravity Medical" }],
   creator: "Antigravity Medical SaaS",
   robots: {
-    index: false, // Indexation désactivée pour une app médicale privée
+    index: false,
     follow: false,
+  },
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -51,8 +62,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className={`${inter.variable} ${outfit.variable}`}>
+      <head>
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Antigravity" />
+      </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {children}
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

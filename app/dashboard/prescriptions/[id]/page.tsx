@@ -20,6 +20,7 @@ import {
   Calendar,
   Info,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 
 // ── Page principale ──────────────────────────────────────────
@@ -116,10 +117,31 @@ export default async function PrescriptionDetailPage({
             </span>
             {canEdit && (
               <>
-                <PrescriptionEditForm prescription={prescription} />
+                <PrescriptionEditForm
+                  prescription={{
+                    id: prescription.id,
+                    examType: prescription.examType,
+                    examDetails: prescription.examDetails,
+                    diagnosis: prescription.diagnosis,
+                    notes: prescription.notes,
+                    urgency: prescription.urgency,
+                    status: prescription.status,
+                    prescribingDoctorName: (prescription as { prescribingDoctorName?: string | null }).prescribingDoctorName,
+                    scheduledDate: prescription.scheduledDate,
+                  }}
+                />
                 <DeletePrescriptionButton prescriptionId={prescription.id} />
               </>
             )}
+            <a
+              href={`/api/prescriptions/${prescription.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              PDF
+            </a>
           </div>
         </div>
       </div>

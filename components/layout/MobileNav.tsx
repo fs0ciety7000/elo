@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Activity, Menu, X, LogOut,
-  LayoutDashboard, FileText, ScanLine, User, Users,
+  LayoutDashboard, FileText, ScanLine, User, Users, Stethoscope,
 } from "lucide-react";
 
 // Map nom → composant (évite de sérialiser des React components depuis le Server)
@@ -14,6 +14,7 @@ const ICON_MAP = {
   ScanLine,
   User,
   Users,
+  Stethoscope,
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;

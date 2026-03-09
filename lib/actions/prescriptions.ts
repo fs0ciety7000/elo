@@ -139,7 +139,6 @@ export async function updatePrescriptionStatus(
 ): Promise<ActionResult> {
   const session = await getSession();
   if (!session) return { success: false, message: "Non authentifié" };
-  if (session.role === Role.PATIENT) return { success: false, message: "Accès non autorisé" };
 
   try {
     const prescription = await prisma.prescription.findUnique({
@@ -147,6 +146,11 @@ export async function updatePrescriptionStatus(
       include: { patient: true, doctor: true },
     });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
+
+    // Le patient ne peut modifier que ses propres prescriptions
+    if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
+      return { success: false, message: "Accès non autorisé" };
+    }
 
     const updatedData: { status: PrescriptionStatus; scheduledDate?: Date; completedAt?: Date } = { status };
     if (scheduledDate && status === "SCHEDULED") updatedData.scheduledDate = new Date(scheduledDate);
@@ -199,6 +203,9 @@ const EditPrescriptionSchema = z.object({
   diagnosis: z.string().optional(),
   notes: z.string().optional(),
   urgency: z.boolean().default(false),
+  prescribingDoctorName: z.string().optional(),
+  status: z.enum(["PENDING", "SCHEDULED", "COMPLETED", "CANCELLED"]).optional(),
+  scheduledDate: z.string().optional(),
 });
 
 export async function editPrescription(
@@ -214,6 +221,9 @@ export async function editPrescription(
     diagnosis: formData.get("diagnosis") ?? undefined,
     notes: formData.get("notes") ?? undefined,
     urgency: formData.get("urgency") === "true",
+    prescribingDoctorName: (formData.get("prescribingDoctorName") as string) || undefined,
+    status: (formData.get("status") as string) || undefined,
+    scheduledDate: (formData.get("scheduledDate") as string) || undefined,
   };
 
   const validation = EditPrescriptionSchema.safeParse(rawData);
@@ -233,10 +243,52 @@ export async function editPrescription(
       return { success: false, message: "Accès non autorisé" };
     }
 
-    await prisma.prescription.update({
-      where: { id },
-      data: validation.data,
-    });
+    // Résoudre le médecin par nom/email si fourni
+    let resolvedDoctorId: string | null | undefined = undefined;
+    const doctorNameInput = validation.data.prescribingDoctorName;
+    if (doctorNameInput) {
+      // Chercher par email ou par nom (prénom + nom)
+      const foundDoctor = await prisma.user.findFirst({
+        where: {
+          role: "DOCTOR",
+          OR: [
+            { email: doctorNameInput },
+            {
+              AND: [
+                { firstName: { contains: doctorNameInput.split(" ")[0], mode: "insensitive" } },
+                { lastName: { contains: doctorNameInput.split(" ").slice(1).join(" ") || doctorNameInput, mode: "insensitive" } },
+              ],
+            },
+          ],
+        },
+      });
+      if (foundDoctor) resolvedDoctorId = foundDoctor.id;
+    }
+
+    // Calculer les champs de statut
+    const newStatus = validation.data.status as PrescriptionStatus | undefined;
+    const updateData: Record<string, unknown> = {
+      examType: validation.data.examType,
+      examDetails: validation.data.examDetails,
+      diagnosis: validation.data.diagnosis,
+      notes: validation.data.notes,
+      urgency: validation.data.urgency,
+      prescribingDoctorName: doctorNameInput ?? null,
+    };
+
+    if (resolvedDoctorId !== undefined) updateData.doctorId = resolvedDoctorId;
+
+    if (newStatus && newStatus !== prescription.status) {
+      updateData.status = newStatus;
+      if (newStatus === "SCHEDULED" && validation.data.scheduledDate) {
+        updateData.scheduledDate = new Date(validation.data.scheduledDate);
+      }
+      if (newStatus === "COMPLETED") {
+        updateData.completedAt = new Date();
+      }
+    }
+
+    await prisma.prescription.update({ where: { id }, data: updateData });
 
     revalidatePath(`/dashboard/prescriptions/${id}`);
     revalidatePath("/dashboard/prescriptions");

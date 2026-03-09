@@ -18,8 +18,10 @@ import {
   LogOut,
   ShieldCheck,
   Users,
+  Stethoscope,
 } from "lucide-react";
 import { Role } from "@prisma/client";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 // ── Liens de navigation selon le rôle ────────────────────────
 // icon est un string (IconName) pour pouvoir être sérialisé vers le Client Component
@@ -35,6 +37,11 @@ function getNavLinks(role: Role): { href: string; label: string; icon: IconName 
       href: "/dashboard/upload",
       label: "Numériser une ordonnance",
       icon: "ScanLine",
+    });
+    common.splice(3, 0, {
+      href: "/dashboard/praticiens",
+      label: "Mes praticiens",
+      icon: "Stethoscope",
     });
   }
 
@@ -55,7 +62,7 @@ function getNavLinks(role: Role): { href: string; label: string; icon: IconName 
 }
 
 // Résolution icône pour la sidebar server-side
-const ICON_COMPONENTS = { LayoutDashboard, FileText, ScanLine, User, Users } as const;
+const ICON_COMPONENTS = { LayoutDashboard, FileText, ScanLine, User, Users, Stethoscope } as const;
 
 // ── Composant Layout ─────────────────────────────────────────
 export default async function DashboardLayout({
@@ -114,16 +121,19 @@ export default async function DashboardLayout({
 
         {/* Info utilisateur + déconnexion */}
         <div className="p-4 border-t border-zinc-100">
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-zinc-50 rounded-lg">
-            <ShieldCheck className="w-4 h-4 text-medical-600 flex-shrink-0" />
-            <div className="min-w-0">
-              <div className="text-xs font-semibold text-zinc-900 truncate">
-                {session.firstName} {session.lastName}
-              </div>
-              <div className="text-xs text-zinc-500 truncate">
-                {ROLE_LABELS[session.role]}
+          <div className="flex items-center justify-between mb-3 px-3 py-2 bg-zinc-50 rounded-lg">
+            <div className="flex items-center gap-2 min-w-0">
+              <ShieldCheck className="w-4 h-4 text-medical-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-zinc-900 truncate">
+                  {session.firstName} {session.lastName}
+                </div>
+                <div className="text-xs text-zinc-500 truncate">
+                  {ROLE_LABELS[session.role]}
+                </div>
               </div>
             </div>
+            <DarkModeToggle />
           </div>
           <form action={logoutUser}>
             <button

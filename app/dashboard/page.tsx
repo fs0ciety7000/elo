@@ -18,6 +18,7 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
+import { AnalyticsCharts } from "@/components/dashboard/AnalyticsCharts";
 
 // ── Badge de statut ──────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -179,6 +180,38 @@ export default async function DashboardPage() {
   const upcoming = scheduledWithDates.filter(
     (p) => new Date(p.date) >= now && new Date(p.date) <= in30
   );
+
+  // ── Données analytiques (médecins uniquement) ───────────────
+  const MONTH_SHORT = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+  const analyticsMonthly = isDoctor
+    ? Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+        const y = d.getFullYear(), m = d.getMonth();
+        const bucket = prescriptions.filter((p) => {
+          const c = new Date(p.createdAt);
+          return c.getFullYear() === y && c.getMonth() === m;
+        });
+        return {
+          month: MONTH_SHORT[m],
+          pending: bucket.filter((p) => p.status === "PENDING").length,
+          scheduled: bucket.filter((p) => p.status === "SCHEDULED").length,
+          completed: bucket.filter((p) => p.status === "COMPLETED").length,
+          cancelled: bucket.filter((p) => p.status === "CANCELLED").length,
+        };
+      })
+    : [];
+
+  const analyticsExamTypes = isDoctor
+    ? Object.entries(
+        prescriptions.reduce<Record<string, number>>((acc, p) => {
+          acc[p.examType] = (acc[p.examType] ?? 0) + 1;
+          return acc;
+        }, {})
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([name, count]) => ({ name, count }))
+    : [];
 
   return (
     <div className="p-4 sm:p-8">
@@ -362,6 +395,11 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Analytics médecin ── */}
+      {isDoctor && (
+        <AnalyticsCharts monthly={analyticsMonthly} examTypes={analyticsExamTypes} />
+      )}
     </div>
   );
 }
