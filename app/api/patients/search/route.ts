@@ -11,11 +11,12 @@ export async function GET(req: NextRequest) {
   }
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
+  const all = req.nextUrl.searchParams.get("all") === "true";
   if (q.length < 2) return NextResponse.json([]);
 
-  // Récupère les IDs des patients déjà assignés au médecin (uniquement pour les DOCTOR)
+  // Exclure les patients déjà assignés SAUF si ?all=true (formulaire de prescription)
   let excludedPatientIds: string[] = [];
-  if (session.role === Role.DOCTOR) {
+  if (session.role === Role.DOCTOR && !all) {
     const assignments = await prisma.doctorPatient.findMany({
       where: { doctorId: session.id },
       select: { patientId: true },
@@ -26,7 +27,6 @@ export async function GET(req: NextRequest) {
   const patients = await prisma.user.findMany({
     where: {
       role: Role.PATIENT,
-      // Exclure les patients déjà assignés (seulement pour les DOCTOR)
       ...(session.role === Role.DOCTOR && excludedPatientIds.length > 0
         ? { id: { notIn: excludedPatientIds } }
         : {}),

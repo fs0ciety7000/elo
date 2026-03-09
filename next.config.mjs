@@ -3,14 +3,13 @@ const nextConfig = {
   // Mode standalone pour Docker (réduit la taille de l'image)
   output: "standalone",
 
-  // @react-pdf/renderer doit rester externe (évite le conflit React dual-instance)
-  serverExternalPackages: ["@react-pdf/renderer"],
-
   // Autorise les Server Actions depuis le domaine de production (derrière Traefik)
+  // @react-pdf/renderer reste externe pour éviter le conflit React dual-instance
   experimental: {
     serverActions: {
       allowedOrigins: ["elodie.fs0ciety.org", "localhost:3000"],
     },
+    serverComponentsExternalPackages: ["@react-pdf/renderer"],
   },
 
   // Ne pas bloquer le build sur les erreurs TS/ESLint en CI/Docker

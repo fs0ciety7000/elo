@@ -100,7 +100,7 @@ export function NewPrescriptionForm({ templates = [] }: { templates?: Template[]
     setSearching(true);
     setNotFound(false);
     try {
-      const res = await fetch(`/api/patients/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/patients/search?q=${encodeURIComponent(q)}&all=true`);
       const data: PatientResult[] = await res.json();
       setResults(data);
       setShowDropdown(data.length > 0);
