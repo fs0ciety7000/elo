@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -22,8 +22,8 @@ const LoginSchema = z.object({
 
 type LoginFormData = z.infer<typeof LoginSchema>;
 
-// ── Composant principal ──────────────────────────────────────
-export default function LoginPage() {
+// ── Composant interne (useSearchParams requiert Suspense) ────
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
@@ -188,5 +188,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// ── Page exportée (Suspense requis pour useSearchParams) ─────
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
