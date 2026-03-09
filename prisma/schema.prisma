@@ -74,6 +74,7 @@ model DoctorPatient {
   patientId String
   doctor    User     @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
   patient   User     @relation("PatientAssignments", fields: [patientId], references: [id], onDelete: Cascade)
+  notes           String?  // Notes du médecin concernant ce patient
   createdAt DateTime @default(now())
 
   @@unique([doctorId, patientId])
@@ -100,6 +101,10 @@ model Prescription {
   notes           String?  // Notes additionnelles du médecin
   scheduledDate   DateTime?  // Date de l'examen planifié
   completedAt     DateTime?
+  // Pièce jointe (fichier original uploadé)
+  attachmentUrl   String?
+  attachmentName  String?
+  attachmentSize  Int?
 
   // Relations
   patientId       String

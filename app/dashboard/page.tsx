@@ -60,7 +60,7 @@ function StatCard({
 function MiniCalendar({
   scheduledDates,
 }: {
-  scheduledDates: { date: Date; examType: string; id: string }[];
+  scheduledDates: { date: Date; examType: string; id: string; patientName?: string }[];
 }) {
   const today = new Date();
   const year = today.getFullYear();
@@ -167,6 +167,9 @@ export default async function DashboardPage() {
       date: p.scheduledDate as Date,
       examType: p.examType,
       id: p.id,
+      patientName: isDoctor
+        ? `${p.patient.firstName} ${p.patient.lastName}`
+        : undefined,
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -339,7 +342,10 @@ export default async function DashboardPage() {
                         <div className="text-sm font-medium text-zinc-900 truncate">
                           {exam.examType}
                         </div>
-                        <div className="text-xs text-zinc-400">
+                        <div className="text-xs text-zinc-400 truncate">
+                          {exam.patientName && (
+                            <span className="font-medium text-zinc-500">{exam.patientName} · </span>
+                          )}
                           {d.toLocaleDateString("fr-BE", {
                             weekday: "short",
                             hour: "2-digit",

@@ -19,6 +19,8 @@ services:
       - traefik.http.routers.medical-app.entrypoints=https
       - traefik.http.routers.medical-app.tls.certresolver=letsencrypt
       - traefik.http.services.medical-app.loadbalancer.server.port=3000
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -45,6 +47,8 @@ services:
 
 volumes:
   pg_data:
+    driver: local
+  uploads_data:
     driver: local
 
 networks:
