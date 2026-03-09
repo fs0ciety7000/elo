@@ -1,10 +1,11 @@
 // ============================================================
-// Server Action — Traitement OCR via Google Cloud Vision
+// Server Action — Traitement OCR via Claude Vision (Anthropic)
 // Analyse une image d'ordonnance manuscrite et extrait le texte
 // ============================================================
 
 "use server";
 
+import Anthropic from "@anthropic-ai/sdk";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -25,134 +26,36 @@ export interface ParsedPrescription {
   urgency: boolean;
 }
 
-// ── Mots-clés pour l'analyse heuristique du texte OCR ────────
-const EXAM_KEYWORDS: Record<string, string[]> = {
-  "IRM": ["irm", "mri", "imagerie par résonance"],
-  "Scanner CT": ["scanner", "ct", "tomodensitométrie", "tdm"],
-  "Radiographie": ["radio", "rx", "radiographie", "rayon"],
-  "Échographie": ["echo", "échographie", "us", "ultrasound"],
-  "Mammographie": ["mammo", "mammographie"],
-  "Scintigraphie": ["scinti", "scintigraphie"],
-  "PET Scan": ["pet", "pet-scan", "tep"],
-};
+// ── Prompt système pour l'analyse d'ordonnance médicale ──────
+const PRESCRIPTION_PROMPT = `Tu es un assistant spécialisé dans la lecture d'ordonnances médicales françaises manuscrites.
 
-// ── Nettoyage du texte OCR (supprime les en-têtes boilerplate) ──
-function cleanOcrText(rawText: string): string {
-  const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+Analyse l'image et extrais les informations suivantes. Réponds UNIQUEMENT avec un objet JSON valide, sans aucun texte avant ou après.
 
-  // Patterns à ignorer : coordonnées cabinet, mentions légales, numéros
-  const boilerplatePatterns = [
-    /^\d{5}\s+\w+/,                        // Code postal + ville
-    /tél?[.:]\s*[\d\s.\-()]+$/i,           // Lignes de téléphone
-    /^\d{2}[\s.\-]\d{2}[\s.\-]\d{2}[\s.\-]\d{2}[\s.\-]\d{2}$/, // Numéro de téléphone
-    /faculté\s+de\s+médecine/i,
-    /médecine\s+générale/i,
-    /n°\s*rpps/i,
-    /sur\s+rendez[\s-]*vous/i,
-    /absent[e]?\s+le?\s+/i,
-    /membre\s+d.une\s+association/i,
-    /règlement\s+par\s+chèque/i,
-    /en\s+cas\s+d.urgence.+prière/i,
-    /prière\s+d.appeler/i,
-    /nam\s+\d+/i,
-    /^\d{10,}$/,                           // Codes barres / NAM
-    /^groupe\s+/i,
-    /place\s+de\s+l.é?glise/i,
-    /^docteur\s+[A-Z][a-zÀ-ÿ\-]+\s+[A-Z]/,  // Lignes d'en-tête médecin
-    /de\s+la\s+faculté/i,
-  ];
-
-  return lines
-    .filter((line) => !boilerplatePatterns.some((re) => re.test(line)))
-    .join("\n");
+Format de réponse attendu :
+{
+  "rawText": "transcription fidèle et complète de tout le texte visible sur l'ordonnance",
+  "examType": "type d'examen prescrit (ex: IRM, Scanner CT, Radiographie, Échographie, Mammographie, Scintigraphie, PET Scan, ou Examen radiologique si inconnu)",
+  "examDetails": "détails de l'examen (zone anatomique, côté droit/gauche, protocole...)",
+  "diagnosis": "motif/indication médicale, symptômes, antécédents pertinents",
+  "doctorName": "nom du médecin prescripteur",
+  "patientName": "nom et prénom du patient si visible",
+  "date": "date de l'ordonnance (format JJ/MM/AAAA si possible)",
+  "urgency": false,
+  "notes": "autres informations utiles (numéro de téléphone du service, instructions spéciales...)"
 }
 
-// ── Analyse heuristique du texte brut ────────────────────────
-function parseOcrText(rawText: string): ParsedPrescription {
-  const cleaned = cleanOcrText(rawText);
-  const lowerText = rawText.toLowerCase();
-  const lowerCleaned = cleaned.toLowerCase();
-
-  // Détection du type d'examen (cherche dans le texte complet)
-  let examType = "Examen radiologique";
-  let examKeywordPos = -1;
-  for (const [type, keywords] of Object.entries(EXAM_KEYWORDS)) {
-    for (const kw of keywords) {
-      const pos = lowerText.indexOf(kw);
-      if (pos !== -1) {
-        examType = type;
-        examKeywordPos = pos;
-        break;
-      }
-    }
-    if (examKeywordPos !== -1) break;
-  }
-
-  // Détection de l'urgence
-  const urgency = lowerCleaned.includes("urgent") || lowerCleaned.includes("urgence");
-
-  // Extraction du médecin
-  const doctorMatch = rawText.match(/(?:Dr\.?|Docteur)\s+([A-Z][A-ZÀ-Ÿa-zÀ-ÿ\-]+(?:\s+[A-Z][A-ZÀ-Ÿa-zÀ-ÿ\-]+)?)/);
-  const doctorName = doctorMatch ? doctorMatch[0] : "Médecin prescripteur";
-
-  // Extraction du motif/diagnostic : texte du texte nettoyé après le type d'examen
-  let diagnosis = "";
-  let examDetails = "";
-
-  const cleanedLines = cleaned.split("\n").filter(Boolean);
-  let foundExam = false;
-  const diagLines: string[] = [];
-
-  for (const line of cleanedLines) {
-    const lower = line.toLowerCase();
-    // Cherche la ligne contenant le type d'examen
-    if (!foundExam) {
-      const isExamLine = Object.values(EXAM_KEYWORDS)
-        .flat()
-        .some((kw) => lower.includes(kw));
-      if (isExamLine) {
-        foundExam = true;
-        // Prend le reste de la ligne après le mot-clé exam comme détails
-        const detail = line.replace(/^(IRM|Scanner|Radio\w*|Écho\w*|Mammo\w*|Scinti\w*|PET[\s-]?Scan?)\s*/i, "").trim();
-        if (detail) examDetails = detail;
-        continue;
-      }
-    } else {
-      // Ignore les lignes qui ressemblent à du bruit résiduel (date, numéro de patient court)
-      if (!/^\d{1,2}\/\d{2}\/\d{2,4}$/.test(line) && !/^\d{1,3}$/.test(line)) {
-        diagLines.push(line);
-      }
-    }
-  }
-
-  diagnosis = diagLines
-    .join(" ")
-    .replace(/\s{2,}/g, " ")
-    .trim()
-    // Nettoie les artefacts OCR courants sur l'écriture manuscrite
-    .replace(/([a-z])\s+([a-z])/g, (_, a, b) => `${a} ${b}`)
-    .trim();
-
-  // Fallback : si rien trouvé après l'exam, prend le texte nettoyé complet
-  if (!diagnosis && cleaned.length > 20) {
-    diagnosis = cleaned.replace(/\n/g, " ").replace(/\s{2,}/g, " ").trim();
-  }
-
-  return {
-    examType,
-    examDetails,
-    diagnosis,
-    doctorName,
-    notes: "",
-    urgency,
-  };
-}
+Règles importantes :
+- Déchiffre l'écriture médicale manuscrite française avec attention
+- ATCD = antécédents, Dt = droite, G = gauche, genou = genou, IRM = IRM, Dr = Docteur
+- Pour rawText : retranscris tout ce qui est lisible, y compris les en-têtes du cabinet
+- Pour urgency : true uniquement si "urgent" ou "urgence" est explicitement écrit
+- Si une information est illisible ou absente, utilise une chaîne vide ""
+- Ne devine pas, reste fidèle au contenu visible`;
 
 // ── Server Action principale ──────────────────────────────────
 export async function processPrescriptionImage(
   formData: FormData
 ): Promise<OcrResult> {
-  // Vérification de l'authentification
   const session = await getSession();
   if (!session) {
     return { success: false, message: "Vous devez être connecté pour utiliser cette fonctionnalité" };
@@ -163,9 +66,8 @@ export async function processPrescriptionImage(
     return { success: false, message: "Aucun fichier fourni" };
   }
 
-  // Types MIME acceptés : images, PDF, Word
   const allowedTypes = [
-    "image/jpeg", "image/jpg", "image/png", "image/webp",
+    "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/msword",
@@ -177,16 +79,15 @@ export async function processPrescriptionImage(
     };
   }
 
-  // Limite : 20 Mo
   if (file.size > 20 * 1024 * 1024) {
     return { success: false, message: "Le fichier ne peut pas dépasser 20 Mo" };
   }
 
-  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return {
       success: false,
-      message: "L'OCR n'est pas configuré (GOOGLE_VISION_API_KEY manquant)",
+      message: "L'OCR n'est pas configuré (ANTHROPIC_API_KEY manquant)",
     };
   }
 
@@ -194,96 +95,125 @@ export async function processPrescriptionImage(
     const buffer = await file.arrayBuffer();
     const base64Content = Buffer.from(buffer).toString("base64");
 
-    const isPdf = file.type === "application/pdf";
     const isWord =
       file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       file.type === "application/msword";
 
     let rawText = "";
+    let parsedData: ParsedPrescription;
 
     if (isWord) {
       // Word : extraction du texte XML brut depuis le .docx (ZIP)
-      // Lecture simplifiée sans dépendance externe
       try {
         const { extractDocxText } = await import("@/lib/docx");
         rawText = await extractDocxText(Buffer.from(buffer));
       } catch {
         return { success: false, message: "Impossible de lire le fichier Word" };
       }
+      parsedData = parseWordText(rawText);
     } else {
-      // Image ou PDF → Google Vision API
-      let visionUrl: string;
-      let visionBody: object;
+      // Image ou PDF → Claude Vision
+      const client = new Anthropic({ apiKey });
 
-      if (isPdf) {
-        // Endpoint dédié aux fichiers PDF/TIFF (inline)
-        visionUrl = `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`;
-        visionBody = {
-          requests: [
-            {
-              inputConfig: {
-                content: base64Content,
-                mimeType: "application/pdf",
-              },
-              features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
-              pages: [1, 2], // Max 2 premières pages
-            },
-          ],
-        };
+      let mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" | "application/pdf";
+      if (file.type === "application/pdf") {
+        mediaType = "application/pdf";
+      } else if (file.type === "image/png") {
+        mediaType = "image/png";
+      } else if (file.type === "image/gif") {
+        mediaType = "image/gif";
+      } else if (file.type === "image/webp") {
+        mediaType = "image/webp";
       } else {
-        // Image classique
-        visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
-        visionBody = {
-          requests: [
-            {
-              image: { content: base64Content },
-              features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
-              imageContext: { languageHints: ["fr", "nl", "en"] },
-            },
-          ],
-        };
+        mediaType = "image/jpeg";
       }
 
-      const visionResponse = await fetch(visionUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(visionBody),
+      const messageContent: Anthropic.MessageParam["content"] = mediaType === "application/pdf"
+        ? [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: base64Content,
+              },
+            },
+            { type: "text", text: PRESCRIPTION_PROMPT },
+          ]
+        : [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: mediaType,
+                data: base64Content,
+              },
+            },
+            { type: "text", text: PRESCRIPTION_PROMPT },
+          ];
+
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        messages: [{ role: "user", content: messageContent }],
       });
 
-      if (!visionResponse.ok) {
-        const errorBody = await visionResponse.text();
-        console.error("[OCR] Erreur Google Vision API :", errorBody);
+      const responseText = response.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as { type: "text"; text: string }).text)
+        .join("");
+
+      // Parse the JSON response from Claude
+      let claudeResult: {
+        rawText?: string;
+        examType?: string;
+        examDetails?: string;
+        diagnosis?: string;
+        doctorName?: string;
+        patientName?: string;
+        date?: string;
+        urgency?: boolean;
+        notes?: string;
+      };
+      try {
+        // Extract JSON from the response (Claude might add markdown code blocks)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("No JSON found");
+        claudeResult = JSON.parse(jsonMatch[0]);
+      } catch {
+        console.error("[OCR] Réponse Claude non-JSON :", responseText);
         return {
           success: false,
-          message: "Erreur lors de l'appel à l'API de reconnaissance optique",
+          message: "Erreur lors de l'analyse de l'ordonnance. Veuillez réessayer.",
         };
       }
 
-      const visionData = await visionResponse.json();
+      rawText = claudeResult.rawText ?? responseText;
 
-      if (isPdf) {
-        // Réponse PDF : responses[].responses[].fullTextAnnotation.text
-        const pages = visionData?.responses?.[0]?.responses ?? [];
-        rawText = pages.map((p: { fullTextAnnotation?: { text?: string } }) =>
-          p?.fullTextAnnotation?.text ?? ""
-        ).join("\n");
-      } else {
-        rawText = visionData?.responses?.[0]?.fullTextAnnotation?.text ?? "";
-      }
+      // Enrichit les notes avec le nom du patient et la date si trouvés
+      const extraNotes: string[] = [];
+      if (claudeResult.patientName) extraNotes.push(`Patient : ${claudeResult.patientName}`);
+      if (claudeResult.date) extraNotes.push(`Date : ${claudeResult.date}`);
+      if (claudeResult.notes) extraNotes.push(claudeResult.notes);
+
+      parsedData = {
+        examType: claudeResult.examType || "Examen radiologique",
+        examDetails: claudeResult.examDetails || "",
+        diagnosis: claudeResult.diagnosis || "",
+        doctorName: claudeResult.doctorName || "Médecin prescripteur",
+        urgency: claudeResult.urgency ?? false,
+        notes: extraNotes.join(" — "),
+      };
     }
 
     if (!rawText) {
       return {
         success: false,
-        message:
-          "Aucun texte détecté dans l'image. Assurez-vous que l'image est nette et bien éclairée.",
+        message: "Aucun texte détecté dans l'image. Assurez-vous que l'image est nette et bien éclairée.",
       };
     }
 
-    // Analyse heuristique du texte pour pré-remplir les champs
-    const parsedData = parseOcrText(rawText);
-
-    // Audit log : traitement OCR
+    // Audit log
     await prisma.auditLog.create({
       data: {
         userId: session.id,
@@ -296,11 +226,7 @@ export async function processPrescriptionImage(
       },
     });
 
-    return {
-      success: true,
-      rawText,
-      parsedData,
-    };
+    return { success: true, rawText, parsedData };
   } catch (error) {
     console.error("[processPrescriptionImage] Erreur :", error);
     return {
@@ -308,4 +234,38 @@ export async function processPrescriptionImage(
       message: "Une erreur inattendue s'est produite lors du traitement de l'image",
     };
   }
+}
+
+// ── Fallback heuristique pour les fichiers Word ───────────────
+function parseWordText(rawText: string): ParsedPrescription {
+  const lower = rawText.toLowerCase();
+
+  const EXAM_KEYWORDS: Record<string, string[]> = {
+    "IRM": ["irm", "mri", "imagerie par résonance"],
+    "Scanner CT": ["scanner", "ct", "tomodensitométrie", "tdm"],
+    "Radiographie": ["radio", "rx", "radiographie", "rayon"],
+    "Échographie": ["echo", "échographie", "ultrasound"],
+    "Mammographie": ["mammo", "mammographie"],
+    "Scintigraphie": ["scinti", "scintigraphie"],
+    "PET Scan": ["pet", "pet-scan", "tep"],
+  };
+
+  let examType = "Examen radiologique";
+  for (const [type, keywords] of Object.entries(EXAM_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      examType = type;
+      break;
+    }
+  }
+
+  const doctorMatch = rawText.match(/(?:Dr\.?|Docteur)\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ\-]+(?:\s+[A-ZÀ-Ÿ][A-Za-zÀ-ÿ\-]+)?)/);
+
+  return {
+    examType,
+    examDetails: "",
+    diagnosis: rawText.replace(/\n/g, " ").trim(),
+    doctorName: doctorMatch ? doctorMatch[0] : "Médecin prescripteur",
+    urgency: lower.includes("urgent") || lower.includes("urgence"),
+    notes: "",
+  };
 }
