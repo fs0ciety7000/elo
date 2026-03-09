@@ -1,0 +1,52 @@
+name: medical-center-saas
+services:
+  medical_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - AUTH_URL=${AUTH_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - GOOGLE_VISION_API_KEY=${GOOGLE_VISION_API_KEY:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-noreply@elodie.fs0ciety.org}
+      - DATABASE_URL=${DATABASE_URL}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.medical-app.rule=Host(`elodie.fs0ciety.org`)
+      - traefik.http.routers.medical-app.entrypoints=https
+      - traefik.http.routers.medical-app.tls.certresolver=letsencrypt
+      - traefik.http.services.medical-app.loadbalancer.server.port=3000
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - coolify
+
+  postgres_db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - coolify
+
+volumes:
+  pg_data:
+    driver: local
+
+networks:
+  coolify:
+    external: true

@@ -1,0 +1,111 @@
+// ============================================================
+// Schéma Prisma — Antigravity Medical SaaS
+// Base de données : PostgreSQL 15
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enum des rôles utilisateurs ──────────────────────────────
+enum Role {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+// ── Enum des statuts de prescription ────────────────────────
+enum PrescriptionStatus {
+  PENDING      // En attente de planification
+  SCHEDULED    // Examen planifié
+  COMPLETED    // Examen réalisé
+  CANCELLED    // Annulé
+}
+
+// ── Enum de la source de la prescription ────────────────────
+enum PrescriptionSource {
+  MANUAL       // Encodage direct par le médecin
+  OCR          // Numérisation via Google Cloud Vision
+}
+
+// ── Table des utilisateurs ───────────────────────────────────
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  password         String   // Hash bcrypt
+  firstName        String
+  lastName         String
+  role             Role     @default(PATIENT)
+  speciality       String?  // Spécialité médicale (pour les DOCTOR)
+  inami            String?  // Numéro INAMI (pour les DOCTOR)
+  phone            String?
+  emailVerified    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  prescriptionsAsPatient  Prescription[] @relation("PatientPrescriptions")
+  prescriptionsAsDoctor   Prescription[] @relation("DoctorPrescriptions")
+  auditLogs               AuditLog[]
+
+  @@map("users")
+}
+
+// ── Table des prescriptions ──────────────────────────────────
+model Prescription {
+  id              String              @id @default(cuid())
+  qrCode          String              @unique @default(cuid()) // ID unique pour QR Code
+  status          PrescriptionStatus  @default(PENDING)
+  source          PrescriptionSource
+
+  // Informations médicales
+  examType        String   // Type d'examen (ex: "IRM Lombaire", "Radio Thorax")
+  examDetails     String?  // Détails supplémentaires
+  urgency         Boolean  @default(false)
+  rawOcrText      String?  // Texte brut retourné par l'OCR (si source=OCR)
+
+  // Ordonnance numérique
+  diagnosis       String?  // Diagnostic ou motif de l'examen
+  notes           String?  // Notes additionnelles du médecin
+  scheduledDate   DateTime?  // Date de l'examen planifié
+  completedAt     DateTime?
+
+  // Relations
+  patientId       String
+  patient         User     @relation("PatientPrescriptions", fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId        String?
+  doctor          User?    @relation("DoctorPrescriptions", fields: [doctorId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("prescriptions")
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+}
+
+// ── Table des journaux d'audit ───────────────────────────────
+// Trace toutes les actions sensibles pour la conformité RGPD
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action     String   // ex: "LOGIN", "CREATE_PRESCRIPTION", "OCR_PROCESS"
+  entity     String?  // ex: "Prescription", "User"
+  entityId   String?  // ID de l'entité concernée
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?    // Données contextuelles supplémentaires
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([createdAt])
+}
