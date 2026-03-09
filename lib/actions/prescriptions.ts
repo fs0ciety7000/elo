@@ -36,19 +36,20 @@ export async function createPrescription(
   }
 
   const rawData = {
-    patientEmail: formData.get("patientEmail") as string | undefined,
-    patientId: formData.get("patientId") as string | undefined,
+    patientEmail: formData.get("patientEmail") ?? undefined,
+    patientId: formData.get("patientId") ?? undefined,
     examType: formData.get("examType") as string,
-    examDetails: formData.get("examDetails") as string | undefined,
-    diagnosis: formData.get("diagnosis") as string | undefined,
-    notes: formData.get("notes") as string | undefined,
+    examDetails: formData.get("examDetails") ?? undefined,
+    diagnosis: formData.get("diagnosis") ?? undefined,
+    notes: formData.get("notes") ?? undefined,
     urgency: formData.get("urgency") === "true",
-    source: (formData.get("source") as string) ?? "MANUAL",
-    rawOcrText: formData.get("rawOcrText") as string | undefined,
+    source: (formData.get("source") ?? "MANUAL") as string,
+    rawOcrText: formData.get("rawOcrText") ?? undefined,
   };
 
   const validation = CreatePrescriptionSchema.safeParse(rawData);
   if (!validation.success) {
+    console.error("[createPrescription] Validation échouée :", validation.error.flatten().fieldErrors);
     return {
       success: false,
       message: "Données invalides",

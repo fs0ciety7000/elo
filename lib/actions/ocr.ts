@@ -78,21 +78,26 @@ export async function processPrescriptionImage(
 
   const file = formData.get("image") as File | null;
   if (!file || file.size === 0) {
-    return { success: false, message: "Aucune image fournie" };
+    return { success: false, message: "Aucun fichier fourni" };
   }
 
-  // Vérification du type MIME (JPEG, PNG, WebP uniquement)
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  // Types MIME acceptés : images, PDF, Word
+  const allowedTypes = [
+    "image/jpeg", "image/jpg", "image/png", "image/webp",
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+  ];
   if (!allowedTypes.includes(file.type)) {
     return {
       success: false,
-      message: "Format non supporté. Utilisez une image JPEG, PNG ou WebP.",
+      message: "Format non supporté. Utilisez JPEG, PNG, WebP, PDF ou Word (.docx).",
     };
   }
 
-  // Vérification de la taille (max 10 Mo)
-  if (file.size > 10 * 1024 * 1024) {
-    return { success: false, message: "L'image ne peut pas dépasser 10 Mo" };
+  // Limite : 20 Mo
+  if (file.size > 20 * 1024 * 1024) {
+    return { success: false, message: "Le fichier ne peut pas dépasser 20 Mo" };
   }
 
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
@@ -104,49 +109,86 @@ export async function processPrescriptionImage(
   }
 
   try {
-    // Conversion de l'image en base64 pour l'API Google Vision
     const buffer = await file.arrayBuffer();
-    const base64Image = Buffer.from(buffer).toString("base64");
+    const base64Content = Buffer.from(buffer).toString("base64");
 
-    // Appel à l'API Google Cloud Vision (DOCUMENT_TEXT_DETECTION)
-    const visionResponse = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    const isPdf = file.type === "application/pdf";
+    const isWord =
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.type === "application/msword";
+
+    let rawText = "";
+
+    if (isWord) {
+      // Word : extraction du texte XML brut depuis le .docx (ZIP)
+      // Lecture simplifiée sans dépendance externe
+      try {
+        const { extractDocxText } = await import("@/lib/docx");
+        rawText = await extractDocxText(Buffer.from(buffer));
+      } catch {
+        return { success: false, message: "Impossible de lire le fichier Word" };
+      }
+    } else {
+      // Image ou PDF → Google Vision API
+      let visionUrl: string;
+      let visionBody: object;
+
+      if (isPdf) {
+        // Endpoint dédié aux fichiers PDF/TIFF (inline)
+        visionUrl = `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`;
+        visionBody = {
           requests: [
             {
-              image: { content: base64Image },
-              features: [
-                {
-                  type: "DOCUMENT_TEXT_DETECTION",
-                  maxResults: 1,
-                },
-              ],
-              imageContext: {
-                languageHints: ["fr", "nl", "en"],
+              inputConfig: {
+                content: base64Content,
+                mimeType: "application/pdf",
               },
+              features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+              pages: [1, 2], // Max 2 premières pages
             },
           ],
-        }),
+        };
+      } else {
+        // Image classique
+        visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+        visionBody = {
+          requests: [
+            {
+              image: { content: base64Content },
+              features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
+              imageContext: { languageHints: ["fr", "nl", "en"] },
+            },
+          ],
+        };
       }
-    );
 
-    if (!visionResponse.ok) {
-      const errorBody = await visionResponse.text();
-      console.error("[OCR] Erreur Google Vision API :", errorBody);
-      return {
-        success: false,
-        message: "Erreur lors de l'appel à l'API de reconnaissance optique",
-      };
+      const visionResponse = await fetch(visionUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(visionBody),
+      });
+
+      if (!visionResponse.ok) {
+        const errorBody = await visionResponse.text();
+        console.error("[OCR] Erreur Google Vision API :", errorBody);
+        return {
+          success: false,
+          message: "Erreur lors de l'appel à l'API de reconnaissance optique",
+        };
+      }
+
+      const visionData = await visionResponse.json();
+
+      if (isPdf) {
+        // Réponse PDF : responses[].responses[].fullTextAnnotation.text
+        const pages = visionData?.responses?.[0]?.responses ?? [];
+        rawText = pages.map((p: { fullTextAnnotation?: { text?: string } }) =>
+          p?.fullTextAnnotation?.text ?? ""
+        ).join("\n");
+      } else {
+        rawText = visionData?.responses?.[0]?.fullTextAnnotation?.text ?? "";
+      }
     }
-
-    const visionData = await visionResponse.json();
-
-    // Extraction du texte depuis la réponse
-    const rawText =
-      visionData?.responses?.[0]?.fullTextAnnotation?.text ?? "";
 
     if (!rawText) {
       return {
