@@ -4,6 +4,7 @@
 // ============================================================
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   ScanLine,
   FileCheck,
@@ -12,7 +13,6 @@ import {
   ArrowRight,
   Stethoscope,
   Users,
-  Activity,
 } from "lucide-react";
 
 // ── Composant principal ──────────────────────────────────────
@@ -23,9 +23,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-medical flex items-center justify-center">
-              <Activity className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Antigravity" width={32} height={32} className="rounded-lg" />
             <span className="font-display font-bold text-lg text-zinc-900">
               Antigravity
               <span className="text-medical-600"> Medical</span>
@@ -267,7 +265,7 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-100 py-8 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-zinc-500 text-sm">
-            <Activity className="w-4 h-4 text-medical-600" />
+            <Image src="/logo.svg" alt="Antigravity" width={16} height={16} />
             <span>© 2024 Antigravity Medical SaaS — Travail de Fin d&apos;Études</span>
           </div>
           <div className="text-xs text-zinc-400">
