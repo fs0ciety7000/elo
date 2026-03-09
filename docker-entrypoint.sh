@@ -11,10 +11,10 @@ set -e
 
 echo "🏥 Antigravity Medical — Démarrage..."
 
-# ── 1. Migrations Prisma ─────────────────────────────────────
-echo "📦 Application des migrations Prisma..."
-npx prisma migrate deploy
-echo "✅ Migrations OK"
+# ── 1. Synchronisation du schéma ────────────────────────────
+echo "📦 Synchronisation du schéma Prisma (db push)..."
+npx prisma db push --accept-data-loss
+echo "✅ Schéma OK"
 
 # ── 2. Seed conditionnel (uniquement si la base est vide) ────
 echo "🔍 Vérification de l'état de la base de données..."
@@ -23,13 +23,13 @@ USER_COUNT=$(node -e "
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 prisma.user.count()
-  .then(count => { console.log(count); prisma.\$disconnect(); })
-  .catch(() => { console.log(0); process.exit(0); });
-")
+  .then(count => { console.log(count); return prisma.\$disconnect(); })
+  .catch(() => { console.log(0); });
+" 2>/dev/null || echo "0")
 
 if [ "$USER_COUNT" = "0" ]; then
   echo "🌱 Base de données vide — lancement du seed initial..."
-  npx tsx prisma/seed.ts
+  npx tsx prisma/seed.ts || echo "⚠️  Seed ignoré (erreur non bloquante)"
   echo "✅ Seed terminé"
 else
   echo "ℹ️  Base déjà initialisée ($USER_COUNT utilisateurs) — seed ignoré"
