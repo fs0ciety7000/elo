@@ -1,78 +1,71 @@
 // ============================================================
 // Service Worker — Antigravity Medical PWA
-// Cache statique + stratégie network-first pour l'API
+// v3 — Stratégie corrigée pour éviter les ChunkLoadError
+// après un déploiement (stale chunks)
 // ============================================================
 
-const CACHE_NAME = "antigravity-v1";
-const STATIC_ASSETS = [
-  "/",
-  "/dashboard",
-  "/manifest.json",
-];
+// Bump ce numéro à chaque déploiement pour vider le cache précédent
+const CACHE_VERSION = "antigravity-v3";
 
-// Installation : pré-cache des assets statiques
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+// Installation : skip waiting pour activer immédiatement
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
-// Activation : nettoyage des anciens caches
+// Activation : supprimer TOUS les anciens caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          .filter((key) => key !== CACHE_VERSION)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch : network-first pour API/pages, cache-first pour assets statiques
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Ignorer les requêtes non-GET et les URLs externes
-  if (request.method !== "GET" || !url.origin.includes(self.location.origin)) return;
+  // Ignorer les requêtes non-GET et les URLs cross-origin
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // Network-first pour les routes API et les pages dynamiques
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/dashboard")) {
+  // ── API : network-only (jamais de cache) ─────────────────
+  if (url.pathname.startsWith("/api/")) {
+    return; // laisser le navigateur gérer
+  }
+
+  // ── _next/static : cache-first (content-hashed, immutables)
+  // Ces fichiers ont le hash dans le nom → safe à cacher indéfiniment
+  if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Mettre en cache une copie fraîche
-          const clone = response.clone();
-          if (response.ok && !url.pathname.startsWith("/api/")) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
+      caches.open(CACHE_VERSION).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        const response = await fetch(request);
+        if (response.ok) cache.put(request, response.clone());
+        return response;
+      })
     );
     return;
   }
 
-  // Cache-first pour les assets statiques (_next/static, images, fonts)
+  // ── Pages HTML + dashboard : network-first ────────────────
+  // Toujours récupérer la page fraîche pour avoir les bons chunk-hashes
+  // Fallback sur le cache uniquement si hors-ligne
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
+    fetch(request)
+      .then((response) => {
+        // Ne pas mettre en cache les pages HTML pour éviter les stale chunks
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });
 
-// Notifications Push
+// ── Notifications Push ────────────────────────────────────
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   const data = event.data.json();
@@ -87,7 +80,6 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// Clic sur une notification
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url ?? "/dashboard";
