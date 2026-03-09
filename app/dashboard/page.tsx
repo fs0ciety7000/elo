@@ -19,6 +19,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { AnalyticsCharts } from "@/components/dashboard/AnalyticsCharts";
+import { CalendarWidget } from "@/components/dashboard/CalendarWidget";
 
 // ── Badge de statut ──────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -57,93 +58,6 @@ function StatCard({
   );
 }
 
-// ── Mini calendrier mensuel ──────────────────────────────────
-function MiniCalendar({
-  scheduledDates,
-}: {
-  scheduledDates: { date: Date; examType: string; id: string; patientName?: string }[];
-}) {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-
-  const firstDay = new Date(year, month, 1).getDay(); // 0=dim
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startOffset = firstDay === 0 ? 6 : firstDay - 1; // lundi=0
-
-  const scheduledSet = new Map<number, string>();
-  for (const s of scheduledDates) {
-    const d = new Date(s.date);
-    if (d.getFullYear() === year && d.getMonth() === month) {
-      scheduledSet.set(d.getDate(), s.examType);
-    }
-  }
-
-  const MONTH_FR = [
-    "Janvier","Février","Mars","Avril","Mai","Juin",
-    "Juillet","Août","Septembre","Octobre","Novembre","Décembre",
-  ];
-  const DAY_FR = ["Lu","Ma","Me","Je","Ve","Sa","Di"];
-
-  const cells: (number | null)[] = [
-    ...Array(startOffset).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-
-  return (
-    <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
-          {MONTH_FR[month]} {year}
-        </h2>
-        <Calendar className="w-4 h-4 text-zinc-400" />
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {DAY_FR.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-zinc-400 py-1">
-            {d}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {cells.map((day, i) => {
-          if (!day) return <div key={i} />;
-          const isToday = day === today.getDate();
-          const hasExam = scheduledSet.has(day);
-          return (
-            <div
-              key={i}
-              title={hasExam ? scheduledSet.get(day) : undefined}
-              className={`relative flex items-center justify-center h-8 rounded-lg text-xs font-medium transition-all cursor-default
-                ${isToday ? "bg-medical-600 text-white" : ""}
-                ${hasExam && !isToday ? "bg-blue-100 text-blue-700 font-semibold" : ""}
-                ${!isToday && !hasExam ? "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800" : ""}
-              `}
-            >
-              {day}
-              {hasExam && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-500" />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-700">
-        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-          <div className="w-3 h-3 rounded-full bg-medical-600" />
-          Aujourd&apos;hui
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-          <div className="w-3 h-3 rounded-full bg-blue-100 border border-blue-300" />
-          Examen planifié
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Page principale ──────────────────────────────────────────
 export default async function DashboardPage() {
@@ -340,7 +254,7 @@ export default async function DashboardPage() {
 
         {/* ── Colonne droite : calendrier + prochains examens ── */}
         <div className="space-y-4">
-          <MiniCalendar scheduledDates={scheduledWithDates} />
+          <CalendarWidget scheduledDates={scheduledWithDates} />
 
           {/* Prochains examens */}
           <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">

@@ -9,8 +9,8 @@ import { getSession } from "@/lib/auth";
 import { logoutUser } from "@/lib/actions/auth";
 import { ROLE_LABELS } from "@/lib/utils";
 import { MobileNav, type IconName } from "@/components/layout/MobileNav";
+import Image from "next/image";
 import {
-  Activity,
   LayoutDashboard,
   FileText,
   ScanLine,
@@ -93,9 +93,7 @@ export default async function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-medical flex items-center justify-center">
-              <Activity className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="Antigravity" width={32} height={32} className="rounded-lg" />
             <span className="font-display font-bold text-base text-zinc-900 dark:text-zinc-100">
               Antigravity
             </span>

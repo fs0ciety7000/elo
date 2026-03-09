@@ -285,7 +285,7 @@ export function PrescriptionPdf({ prescription }: { prescription: PrescriptionDa
 
         {/* Détails médicaux */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Détails de l&apos;examen</Text>
+          <Text style={styles.sectionTitle}>{"Détails de l'examen"}</Text>
           <View style={styles.card}>
             {prescription.diagnosis && (
               <View style={styles.row}>

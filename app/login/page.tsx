@@ -146,6 +146,16 @@ function LoginForm() {
               )}
             </div>
 
+            {/* ── Lien mot de passe oublié ── */}
+            <div className="flex justify-end -mt-1">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-medical-600 hover:text-medical-700 hover:underline transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
+
             {/* ── Bouton de connexion ── */}
             <button
               type="submit"

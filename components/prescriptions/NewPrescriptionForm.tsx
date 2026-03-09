@@ -16,6 +16,7 @@ import { createPatientAccount } from "@/lib/actions/patients";
 import { TemplateSelector } from "./TemplateSelector";
 import {
   Loader2, Save, Search, UserPlus, CheckCircle, X, ChevronRight, BookTemplate,
+  Paperclip, Trash2,
 } from "lucide-react";
 
 const EXAM_SUGGESTIONS = [
@@ -66,6 +67,28 @@ export function NewPrescriptionForm({ templates = [] }: { templates?: Template[]
   const [templateName, setTemplateName] = useState("");
   const [savingTemplate, startSavingTemplate] = useTransition();
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Pièce jointe
+  const [attachment, setAttachment] = useState<{ url: string; name: string; size: number } | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploadingFile(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setUploadError(data.error ?? "Erreur upload"); return; }
+      setAttachment({ url: data.url, name: data.name, size: data.size });
+    } catch { setUploadError("Erreur réseau"); }
+    finally { setUploadingFile(false); if (fileInputRef.current) fileInputRef.current.value = ""; }
+  }
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(Schema),
@@ -168,6 +191,11 @@ export function NewPrescriptionForm({ templates = [] }: { templates?: Template[]
       if (data.diagnosis) fd.append("diagnosis", data.diagnosis);
       if (data.notes) fd.append("notes", data.notes);
       fd.append("urgency", String(data.urgency));
+      if (attachment) {
+        fd.append("attachmentUrl", attachment.url);
+        fd.append("attachmentName", attachment.name);
+        fd.append("attachmentSize", String(attachment.size));
+      }
       const result = await createPrescription(fd);
       if (result.success && result.data) router.push(`/dashboard/prescriptions/${result.data.id}`);
       else setServerError(result.message);
@@ -314,6 +342,36 @@ export function NewPrescriptionForm({ templates = [] }: { templates?: Template[]
             ⚡ Marquer comme urgent
             <span className="block text-xs text-red-500 font-normal mt-0.5">L&apos;examen doit être réalisé dans les plus brefs délais</span>
           </label>
+        </div>
+
+        {/* ── Pièce jointe ── */}
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-2">
+            <Paperclip className="w-4 h-4" />
+            Ordonnance originale (facultatif)
+          </label>
+          {attachment ? (
+            <div className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-xl">
+              <Paperclip className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">{attachment.name}</div>
+                <div className="text-xs text-zinc-400">{(attachment.size / 1024).toFixed(1)} Ko</div>
+              </div>
+              <button type="button" onClick={() => setAttachment(null)} className="text-zinc-400 hover:text-red-500 transition-colors">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div>
+              <input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.docx,.doc" onChange={handleFileChange} className="hidden" id="attachment-input" />
+              <label htmlFor="attachment-input"
+                className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-zinc-300 dark:border-zinc-600 rounded-xl text-sm text-zinc-500 dark:text-zinc-400 hover:border-medical-400 hover:text-medical-600 cursor-pointer transition-all w-fit">
+                {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                {uploadingFile ? "Envoi en cours..." : "Joindre un fichier (img, PDF)"}
+              </label>
+              {uploadError && <p className="text-xs text-red-500 mt-1">{uploadError}</p>}
+            </div>
+          )}
         </div>
 
         {/* ── Sauvegarder comme modèle ── */}

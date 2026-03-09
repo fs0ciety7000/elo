@@ -21,6 +21,7 @@ import {
   Info,
   AlertTriangle,
   Download,
+  Paperclip,
 } from "lucide-react";
 
 // ── Page principale ──────────────────────────────────────────
@@ -193,6 +194,47 @@ export default async function PrescriptionDetailPage({
               )}
             </dl>
           </div>
+
+          {/* Pièce jointe originale */}
+          {prescription.attachmentUrl && (
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-medical-600" />
+                Ordonnance originale
+              </h2>
+              {/\.(jpg|jpeg|png|webp)$/i.test(prescription.attachmentName ?? "") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={prescription.attachmentUrl}
+                  alt={prescription.attachmentName ?? "Pièce jointe"}
+                  className="max-w-full rounded-lg border border-zinc-200 dark:border-zinc-700 mb-3"
+                />
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg mb-3">
+                  <Paperclip className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-zinc-800 dark:text-zinc-100 truncate">
+                      {prescription.attachmentName ?? "Fichier joint"}
+                    </div>
+                    {prescription.attachmentSize && (
+                      <div className="text-xs text-zinc-400">
+                        {(prescription.attachmentSize / 1024).toFixed(1)} Ko
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              <a
+                href={prescription.attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-medical-600 hover:text-medical-700 font-medium"
+              >
+                <Download className="w-4 h-4" />
+                Télécharger / Visualiser
+              </a>
+            </div>
+          )}
 
           {/* Texte OCR brut (si applicable) */}
           {prescription.rawOcrText && (

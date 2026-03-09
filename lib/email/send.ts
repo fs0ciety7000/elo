@@ -293,6 +293,53 @@ interface PatientCreatedByDoctorParams {
   temporaryPassword: string;
 }
 
+// ══════════════════════════════════════════════════════════════
+// 5. EMAIL DE RÉINITIALISATION DU MOT DE PASSE
+// ══════════════════════════════════════════════════════════════
+interface PasswordResetParams {
+  resetUrl: string;
+  userName: string;
+}
+
+export async function sendPasswordResetEmail(to: string, p: PasswordResetParams): Promise<void> {
+  const content = `
+    <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:1px;">
+      Réinitialisation du mot de passe
+    </p>
+    <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-0.5px;">
+      Réinitialiser votre mot de passe
+    </h1>
+    <p style="margin:0 0 24px;font-size:14px;color:#64748b;line-height:1.6;">
+      Bonjour <strong>${p.userName}</strong>, nous avons reçu une demande de réinitialisation du mot de passe
+      associé à votre compte <strong>${APP_NAME}</strong>. Cliquez sur le bouton ci-dessous pour
+      choisir un nouveau mot de passe.
+    </p>
+
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin-bottom:28px;text-align:center;">
+      <p style="margin:0 0 6px;font-size:13px;color:#1e40af;font-weight:600;">
+        Ce lien est valable pendant <strong>1 heure</strong>
+      </p>
+      <p style="margin:0;font-size:12px;color:#60a5fa;">
+        Passé ce délai, vous devrez effectuer une nouvelle demande.
+      </p>
+    </div>
+
+    ${ctaButton("Réinitialiser mon mot de passe", p.resetUrl, "#2563eb")}
+
+    <p style="margin:28px 0 0;font-size:12px;color:#94a3b8;text-align:center;">
+      Si vous n'avez pas demandé cette réinitialisation, ignorez cet e-mail —
+      votre mot de passe ne sera pas modifié.
+    </p>
+  `;
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Réinitialisation de votre mot de passe — ${APP_NAME}`,
+    html: emailBase(content, "Réinitialisation du mot de passe"),
+  });
+}
+
 export async function sendPatientAccountCreatedEmail(to: string, p: PatientCreatedByDoctorParams): Promise<void> {
   const baseUrl = getBaseUrl();
 

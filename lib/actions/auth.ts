@@ -9,11 +9,12 @@
 
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { signToken, setSessionCookie, clearSessionCookie } from "@/lib/auth";
 import { Role } from "@prisma/client";
-import { sendWelcomeEmail } from "@/lib/email/send";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "@/lib/email/send";
 
 // ── Schémas de validation Zod ────────────────────────────────
 const RegisterSchema = z.object({
@@ -212,6 +213,111 @@ export async function loginUser(
 export async function logoutUser(): Promise<void> {
   await clearSessionCookie();
   redirect("/login");
+}
+
+// ── Action : Mot de passe oublié ──────────────────────────────
+export async function forgotPassword(formData: FormData): Promise<ActionResult> {
+  const email = (formData.get("email") as string | null)?.trim() ?? "";
+
+  if (!email || !z.string().email().safeParse(email).success) {
+    return { success: false, message: "Adresse email invalide" };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Réponse générique pour éviter l'énumération des comptes
+    if (!user) {
+      return {
+        success: true,
+        message: "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.",
+      };
+    }
+
+    const token = randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // +1h
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordResetToken: token, passwordResetExpires: expires },
+    });
+
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? "https://elodie.fs0ciety.org";
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    sendPasswordResetEmail(user.email, {
+      resetUrl,
+      userName: `${user.firstName} ${user.lastName}`,
+    }).catch((err) =>
+      console.error("[forgotPassword] Erreur email :", err)
+    );
+
+    return {
+      success: true,
+      message: "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.",
+    };
+  } catch (error) {
+    console.error("[forgotPassword] Erreur :", error);
+    return { success: false, message: "Une erreur inattendue s'est produite." };
+  }
+}
+
+// ── Action : Réinitialisation du mot de passe ─────────────────
+export async function resetPassword(formData: FormData): Promise<ActionResult> {
+  const token = (formData.get("token") as string | null)?.trim() ?? "";
+  const password = (formData.get("password") as string | null) ?? "";
+
+  if (!token) {
+    return { success: false, message: "Token manquant ou invalide" };
+  }
+
+  const passwordValidation = z
+    .string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .safeParse(password);
+
+  if (!passwordValidation.success) {
+    return {
+      success: false,
+      message: passwordValidation.error.errors[0].message,
+    };
+  }
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Ce lien de réinitialisation est invalide ou a expiré.",
+      };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+    };
+  } catch (error) {
+    console.error("[resetPassword] Erreur :", error);
+    return { success: false, message: "Une erreur inattendue s'est produite." };
+  }
 }
 
 // ── Schéma mise à jour profil ─────────────────────────────────
