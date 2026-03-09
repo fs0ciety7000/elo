@@ -192,6 +192,92 @@ export async function updatePrescriptionStatus(
   }
 }
 
+// ── Action : Modification d'une prescription ──────────────────
+const EditPrescriptionSchema = z.object({
+  examType: z.string().min(3, "Le type d'examen est requis"),
+  examDetails: z.string().optional(),
+  diagnosis: z.string().optional(),
+  notes: z.string().optional(),
+  urgency: z.boolean().default(false),
+});
+
+export async function editPrescription(
+  id: string,
+  formData: FormData
+): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { success: false, message: "Non authentifié" };
+
+  const rawData = {
+    examType: formData.get("examType") as string,
+    examDetails: formData.get("examDetails") ?? undefined,
+    diagnosis: formData.get("diagnosis") ?? undefined,
+    notes: formData.get("notes") ?? undefined,
+    urgency: formData.get("urgency") === "true",
+  };
+
+  const validation = EditPrescriptionSchema.safeParse(rawData);
+  if (!validation.success) {
+    return { success: false, message: "Données invalides", errors: validation.error.flatten().fieldErrors };
+  }
+
+  try {
+    const prescription = await prisma.prescription.findUnique({ where: { id } });
+    if (!prescription) return { success: false, message: "Prescription introuvable" };
+
+    // Contrôle d'accès
+    if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
+      return { success: false, message: "Accès non autorisé" };
+    }
+    if (session.role === Role.DOCTOR && prescription.doctorId !== session.id) {
+      return { success: false, message: "Accès non autorisé" };
+    }
+
+    await prisma.prescription.update({
+      where: { id },
+      data: validation.data,
+    });
+
+    revalidatePath(`/dashboard/prescriptions/${id}`);
+    revalidatePath("/dashboard/prescriptions");
+    revalidatePath("/dashboard");
+
+    return { success: true, message: "Prescription modifiée avec succès" };
+  } catch (error) {
+    console.error("[editPrescription] Erreur :", error);
+    return { success: false, message: "Erreur lors de la modification" };
+  }
+}
+
+// ── Action : Suppression d'une prescription ───────────────────
+export async function deletePrescription(id: string): Promise<ActionResult> {
+  const session = await getSession();
+  if (!session) return { success: false, message: "Non authentifié" };
+
+  try {
+    const prescription = await prisma.prescription.findUnique({ where: { id } });
+    if (!prescription) return { success: false, message: "Prescription introuvable" };
+
+    // Contrôle d'accès
+    if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
+      return { success: false, message: "Accès non autorisé" };
+    }
+    if (session.role === Role.DOCTOR && prescription.doctorId !== session.id) {
+      return { success: false, message: "Accès non autorisé" };
+    }
+
+    await prisma.prescription.delete({ where: { id } });
+
+    revalidatePath("/dashboard/prescriptions");
+    revalidatePath("/dashboard");
+
+    return { success: true, message: "Prescription supprimée" };
+  } catch (error) {
+    console.error("[deletePrescription] Erreur :", error);
+    return { success: false, message: "Erreur lors de la suppression" };
+  }
+}
+
 // ── Action : Récupération des prescriptions ───────────────────
 export async function getUserPrescriptions() {
   const session = await getSession();

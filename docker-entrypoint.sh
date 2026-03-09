@@ -35,6 +35,10 @@ else
   echo "ℹ️  Base déjà initialisée ($USER_COUNT utilisateurs) — seed ignoré"
 fi
 
-# ── 3. Démarrage de l'application ────────────────────────────
+# ── 3. Répertoire uploads ────────────────────────────────────
+mkdir -p /app/uploads && chmod 777 /app/uploads
+echo "📁 Répertoire uploads prêt"
+
+# ── 4. Démarrage de l'application ────────────────────────────
 echo "🚀 Démarrage du serveur Next.js..."
 exec node server.js
