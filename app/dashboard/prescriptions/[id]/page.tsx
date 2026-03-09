@@ -150,7 +150,7 @@ export default async function PrescriptionDetailPage({
                   <div>
                     <div className="text-xs text-blue-500 font-medium">Date planifiée</div>
                     <div className="text-sm font-medium text-blue-800">
-                      {formatDate(prescription.scheduledDate, { dateStyle: "full" })}
+                      {formatDate(prescription.scheduledDate, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                     </div>
                   </div>
                 </div>
