@@ -7,10 +7,14 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
 COPY prisma ./prisma/
 
-RUN npm ci --frozen-lockfile
+# npm ci si lockfile présent, sinon npm install
+RUN if [ -f package-lock.json ]; then npm ci; \
+    elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
+    elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install --frozen-lockfile; \
+    else npm install; fi
 
 # ── Étape 2 : Build de l'application ───────────────────────
 FROM node:20-alpine AS builder
@@ -29,7 +33,7 @@ ENV NODE_ENV production
 
 RUN npm run build
 
-# ── Étape 3 : Image de production allégée ──────────────────
+# ── Étape 3 : Image de production ──────────────────────────
 FROM node:20-alpine AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
@@ -41,15 +45,22 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copie les fichiers de build standalone
+# Copie les fichiers de build standalone Next.js
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copie Prisma pour les migrations au démarrage
+# Copie Prisma (schéma + seed + client généré)
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/package.json ./package.json
+
+# Copie node_modules complet depuis le builder
+# Nécessaire pour : prisma migrate, tsx (seed), bcryptjs
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copie et rend exécutable le script d'entrypoint
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 USER nextjs
 
@@ -57,5 +68,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Lance les migrations puis démarre l'application
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# L'entrypoint gère : migrations → seed conditionnel → démarrage
+ENTRYPOINT ["./docker-entrypoint.sh"]
