@@ -174,27 +174,64 @@ export default async function PatientFilePage({
           )}
 
           {/* Examens précédents — visible pour médecin et admin */}
-          {!isSecretary && completed.length > 0 && (
+          {!isSecretary && (
             <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
-              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" /> Examens précédents
-              </h2>
-              <div className="space-y-1.5">
-                {completed.slice(0, 5).map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/dashboard/prescriptions/${p.id}`}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group text-sm"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                    <span className="text-zinc-700 dark:text-zinc-300 truncate flex-1">{p.examType}</span>
-                    <span className="text-xs text-zinc-400 flex-shrink-0">{formatDate(p.completedAt ?? p.createdAt)}</span>
-                  </Link>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Examens précédents
+                  {completed.length > 0 && (
+                    <span className="text-xs font-normal text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded-full">
+                      {completed.length}
+                    </span>
+                  )}
+                </h2>
                 {completed.length > 5 && (
-                  <p className="text-xs text-zinc-400 text-center pt-1">+{completed.length - 5} autres</p>
+                  <Link
+                    href={`/dashboard/prescriptions?status=COMPLETED`}
+                    className="text-xs text-medical-600 hover:text-medical-700 font-medium"
+                  >
+                    Voir tout
+                  </Link>
                 )}
               </div>
+              {completed.length === 0 ? (
+                <p className="text-xs text-zinc-400 text-center py-3">Aucun examen terminé</p>
+              ) : (
+                <div className="space-y-2">
+                  {completed.slice(0, 5).map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/dashboard/prescriptions/${p.id}`}
+                      className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate group-hover:text-medical-700 dark:group-hover:text-medical-400 transition-colors">
+                          {p.examType}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {p.doctor && (
+                            <span className="text-xs text-zinc-400 truncate">
+                              Dr. {p.doctor.lastName}
+                            </span>
+                          )}
+                          <span className="text-xs text-zinc-300 dark:text-zinc-600">·</span>
+                          <span className="text-xs text-zinc-400 flex-shrink-0">
+                            {formatDate(p.completedAt ?? p.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-3 h-3 text-zinc-300 group-hover:text-zinc-500 flex-shrink-0 mt-1.5" />
+                    </Link>
+                  ))}
+                  {completed.length > 5 && (
+                    <p className="text-xs text-zinc-400 text-center pt-1">+{completed.length - 5} autres</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

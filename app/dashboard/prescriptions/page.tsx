@@ -15,8 +15,8 @@ import {
   ArrowRight,
   Filter,
   Calendar,
-  ArrowUpDown,
 } from "lucide-react";
+import { SecretaryRdvList } from "@/components/prescriptions/SecretaryRdvList";
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -90,24 +90,6 @@ export default async function PrescriptionsPage({
     { value: "CANCELLED", label: "Annulés" },
   ];
 
-  function sortLink(key: SortKey) {
-    const newDir = sortBy === key && sortDir === "asc" ? "desc" : "asc";
-    const params = new URLSearchParams();
-    if (filterStatus) params.set("status", filterStatus);
-    params.set("sort", key);
-    params.set("dir", newDir);
-    return `?${params.toString()}`;
-  }
-
-  const SortTh = ({ label, k }: { label: string; k: SortKey }) => (
-    <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">
-      <Link href={sortLink(k)} className="inline-flex items-center gap-1 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
-        {label}
-        <ArrowUpDown className={`w-3 h-3 ${sortBy === k ? "text-medical-600" : "text-zinc-300"}`} />
-      </Link>
-    </th>
-  );
-
   return (
     <div className="p-8">
       {/* ── En-tête ── */}
@@ -152,11 +134,16 @@ export default async function PrescriptionsPage({
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <Filter className="w-4 h-4 text-zinc-400 flex-shrink-0" />
         {statusFilters.map((f) => {
-          const params = new URLSearchParams();
-          if (f.value) params.set("status", f.value);
-          if (sortBy !== "date") params.set("sort", sortBy);
-          if (sortDir !== "desc") params.set("dir", sortDir);
-          const href = params.toString() ? `?${params.toString()}` : "/dashboard/prescriptions";
+          let href: string;
+          if (isSecretary) {
+            href = f.value ? `?status=${f.value}` : "/dashboard/prescriptions";
+          } else {
+            const params = new URLSearchParams();
+            if (f.value) params.set("status", f.value);
+            if (sortBy !== "date") params.set("sort", sortBy);
+            if (sortDir !== "desc") params.set("dir", sortDir);
+            href = params.toString() ? `?${params.toString()}` : "/dashboard/prescriptions";
+          }
           return (
             <Link
               key={f.value}
@@ -173,79 +160,53 @@ export default async function PrescriptionsPage({
         })}
       </div>
 
-      {/* ── Table ── */}
-      <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 overflow-hidden">
-        {sorted.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileText className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
-            <h3 className="font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              {isSecretary ? "Aucun rendez-vous trouvé" : "Aucune prescription trouvée"}
-            </h3>
-            <p className="text-sm text-zinc-400">
-              {filterStatus ? "Modifiez les filtres pour voir plus de résultats." : isSecretary ? "Créez un premier rendez-vous." : "Créez ou numérisez votre première ordonnance."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-100 dark:border-zinc-700">
-                <tr>
-                  {isSecretary ? (
-                    <>
-                      <SortTh label="Examen" k="examType" />
-                      <SortTh label="Patient" k="patient" />
-                      <SortTh label="Médecin" k="doctor" />
-                      <SortTh label="Date" k="date" />
-                      <SortTh label="Statut" k="status" />
-                    </>
-                  ) : (
-                    <>
-                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Examen</th>
+      {/* ── Vue secrétaire : recherche + tri client-side ── */}
+      {isSecretary ? (
+        <SecretaryRdvList prescriptions={prescriptions} filterStatus={filterStatus} />
+      ) : (
+        /* ── Vue médecin / patient : table serveur ── */
+        <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 overflow-hidden">
+          {sorted.length === 0 ? (
+            <div className="p-12 text-center">
+              <FileText className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
+              <h3 className="font-medium text-zinc-700 dark:text-zinc-300 mb-2">Aucune prescription trouvée</h3>
+              <p className="text-sm text-zinc-400">
+                {filterStatus ? "Modifiez les filtres pour voir plus de résultats." : "Créez ou numérisez votre première ordonnance."}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-100 dark:border-zinc-700">
+                  <tr>
+                    <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Examen</th>
+                    {isDoctor ? (
+                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Patient</th>
+                    ) : (
+                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Médecin</th>
+                    )}
+                    <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Source</th>
+                    <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Date</th>
+                    <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Statut</th>
+                    <th className="px-6 py-4" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-50 dark:divide-zinc-700">
+                  {sorted.map((p) => (
+                    <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">{p.examType}</div>
+                        {p.urgency && <span className="text-xs text-red-600 font-medium">⚡ Urgent</span>}
+                      </td>
                       {isDoctor ? (
-                        <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Patient</th>
-                      ) : (
-                        <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Médecin</th>
-                      )}
-                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Source</th>
-                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Date</th>
-                      <th className="text-left text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide px-6 py-4">Statut</th>
-                    </>
-                  )}
-                  <th className="px-6 py-4" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-50 dark:divide-zinc-700">
-                {sorted.map((p) => (
-                  <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">{p.examType}</div>
-                      {p.urgency && <span className="text-xs text-red-600 font-medium">⚡ Urgent</span>}
-                      {isSecretary && p.scheduledDate && (
-                        <div className="text-xs text-blue-600 flex items-center gap-1 mt-0.5">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(p.scheduledDate)}
-                        </div>
-                      )}
-                    </td>
-                    {isSecretary ? (
-                      <>
                         <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
                           {p.patient.firstName} {p.patient.lastName}
                         </td>
+                      ) : (
                         <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
                           {p.doctor ? `Dr. ${p.doctor.firstName} ${p.doctor.lastName}` : "—"}
                         </td>
-                      </>
-                    ) : isDoctor ? (
-                      <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {p.patient.firstName} {p.patient.lastName}
-                      </td>
-                    ) : (
-                      <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {p.doctor ? `Dr. ${p.doctor.firstName} ${p.doctor.lastName}` : "—"}
-                      </td>
-                    )}
-                    {!isSecretary && (
+                      )}
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
                           {p.source === "OCR" ? (
@@ -255,28 +216,28 @@ export default async function PrescriptionsPage({
                           )}
                         </span>
                       </td>
-                    )}
-                    <td className="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
-                      {formatDate(p.createdAt)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={p.status} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/dashboard/prescriptions/${p.id}`}
-                        className="inline-flex items-center gap-1 text-xs text-medical-600 hover:text-medical-700 font-medium"
-                      >
-                        Voir <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      <td className="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
+                        {formatDate(p.createdAt)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={p.status} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <Link
+                          href={`/dashboard/prescriptions/${p.id}`}
+                          className="inline-flex items-center gap-1 text-xs text-medical-600 hover:text-medical-700 font-medium"
+                        >
+                          Voir <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
