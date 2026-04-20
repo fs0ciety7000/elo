@@ -35,10 +35,14 @@ else
   echo "ℹ️  Base déjà initialisée ($USER_COUNT utilisateurs) — seed ignoré"
 fi
 
-# ── 3. Répertoire uploads ────────────────────────────────────
+# ── 3. Comptes de test (upsert — idempotent) ────────────────
+echo "🧪 Mise à jour des comptes de test..."
+npx tsx prisma/seed-test-accounts.ts || echo "⚠️  Comptes de test ignorés (erreur non bloquante)"
+
+# ── 4. Répertoire uploads ────────────────────────────────────
 mkdir -p /app/uploads
 echo "📁 Répertoire uploads prêt"
 
-# ── 4. Démarrage de l'application ────────────────────────────
+# ── 5. Démarrage de l'application ────────────────────────────
 echo "🚀 Démarrage du serveur Next.js..."
 exec node server.js
