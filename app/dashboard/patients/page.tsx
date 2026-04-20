@@ -5,7 +5,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { getPatients } from "@/lib/actions/patients";
+import { getPatients, getDoctors } from "@/lib/actions/patients";
 import { Role } from "@prisma/client";
 import { Users, Plus } from "lucide-react";
 import { PatientSearchAssign } from "@/components/patients/PatientSearchAssign";
@@ -17,6 +17,8 @@ export default async function PatientsPage() {
 
   const patients = await getPatients();
   const isAdmin = session.role === Role.ADMIN;
+  const isSecretary = session.role === Role.SECRETARY;
+  const doctors = isSecretary ? await getDoctors() : [];
 
   return (
     <div className="p-4 sm:p-8">
@@ -24,7 +26,7 @@ export default async function PatientsPage() {
         <div>
           <h1 className="font-display text-xl sm:text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
             <Users className="w-6 h-6 text-medical-600" />
-            {isAdmin ? "Tous les patients" : "Mes patients"}
+            {isAdmin || isSecretary ? "Tous les patients" : "Mes patients"}
           </h1>
           <p className="text-zinc-500 text-sm mt-1">
             {patients.length} patient{patients.length !== 1 ? "s" : ""} enregistré{patients.length !== 1 ? "s" : ""}
@@ -57,6 +59,8 @@ export default async function PatientsPage() {
           patients={patients}
           currentDoctorId={session.id}
           isAdmin={isAdmin}
+          isSecretary={isSecretary}
+          doctors={doctors}
         />
       )}
     </div>

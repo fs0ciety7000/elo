@@ -50,6 +50,7 @@ const CreatePrescriptionSchema = z.object({
   attachmentUrl: z.string().optional(),
   attachmentName: z.string().optional(),
   attachmentSize: z.number().optional(),
+  scheduledDate: z.string().optional(),
 });
 
 // ── Action : Création d'une prescription ─────────────────────
@@ -73,6 +74,7 @@ export async function createPrescription(
     attachmentUrl: formData.get("attachmentUrl") ?? undefined,
     attachmentName: formData.get("attachmentName") ?? undefined,
     attachmentSize: attachmentSizeRaw ? Number(attachmentSizeRaw) : undefined,
+    scheduledDate: formData.get("scheduledDate") ?? undefined,
   };
 
   const validation = CreatePrescriptionSchema.safeParse(rawData);
@@ -87,7 +89,21 @@ export async function createPrescription(
     let patientId: string;
     let doctorId: string | undefined;
 
-    if (session.role === Role.DOCTOR || session.role === Role.ADMIN) {
+    if (session.role === Role.SECRETARY) {
+      // Secretary creates appointments: must provide explicit doctorId and patientId
+      const explicitDoctorId = formData.get("doctorId") as string | null;
+      if (!explicitDoctorId) return { success: false, message: "Médecin requis" };
+      doctorId = explicitDoctorId;
+      if (data.patientId) {
+        patientId = data.patientId;
+      } else if (data.patientEmail) {
+        const patient = await prisma.user.findUnique({ where: { email: data.patientEmail } });
+        if (!patient) return { success: false, message: `Aucun patient trouvé avec l'email : ${data.patientEmail}` };
+        patientId = patient.id;
+      } else {
+        return { success: false, message: "Patient requis" };
+      }
+    } else if (session.role === Role.DOCTOR || session.role === Role.ADMIN) {
       doctorId = session.id;
       if (data.patientEmail) {
         const patient = await prisma.user.findUnique({ where: { email: data.patientEmail } });
@@ -113,7 +129,8 @@ export async function createPrescription(
         urgency: data.urgency,
         source: data.source as "MANUAL" | "OCR",
         rawOcrText: data.rawOcrText,
-        status: "PENDING",
+        status: data.scheduledDate ? "SCHEDULED" : "PENDING",
+        scheduledDate: data.scheduledDate ? new Date(data.scheduledDate) : undefined,
         attachmentUrl: data.attachmentUrl,
         attachmentName: data.attachmentName,
         attachmentSize: data.attachmentSize,
@@ -378,7 +395,7 @@ export async function getUserPrescriptions() {
         ? { patientId: session.id }
         : session.role === Role.DOCTOR
         ? { doctorId: session.id }
-        : {}; // ADMIN and SECRETARY see all
+        : { doctorId: { not: null } }; // ADMIN/SECRETARY: exclude patient self-uploads
 
     return await prisma.prescription.findMany({
       where,

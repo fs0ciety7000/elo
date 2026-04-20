@@ -1,16 +1,24 @@
 "use client";
 
 // ============================================================
-// PatientSearchAssign — Recherche + filtre côté client
-// Composant client embarqué dans la page patients (DOCTOR)
+// PatientSearchAssign — Recherche + filtre + assignation
 // ============================================================
 
 import { useState, useTransition, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, UserPlus, Loader2, Check, X, ArrowRight, FileText, User } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  Loader2,
+  Check,
+  X,
+  ArrowRight,
+  FileText,
+  User,
+  Stethoscope,
+} from "lucide-react";
 import { assignPatientToDoctor } from "@/lib/actions/patients";
 
-// ── Types ─────────────────────────────────────────────────────
 interface PatientCard {
   id: string;
   firstName: string;
@@ -28,15 +36,28 @@ interface SearchResult {
   email: string;
 }
 
+interface DoctorOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  speciality?: string | null;
+}
+
 interface Props {
   patients: PatientCard[];
   currentDoctorId: string;
   isAdmin: boolean;
+  isSecretary?: boolean;
+  doctors?: DoctorOption[];
 }
 
-// ── Composant principal ───────────────────────────────────────
-export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Props) {
-  // --- Filtre local (patients déjà assignés) ---
+export function PatientSearchAssign({
+  patients,
+  currentDoctorId,
+  isAdmin,
+  isSecretary = false,
+  doctors = [],
+}: Props) {
   const [filterQuery, setFilterQuery] = useState("");
 
   const filteredPatients = filterQuery.trim().length === 0
@@ -50,13 +71,13 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
         );
       });
 
-  // --- Recherche patients existants à assigner ---
   const [assignQuery, setAssignQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [assignedIds, setAssignedIds] = useState<Set<string>>(new Set());
   const [assignError, setAssignError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleAssignSearch = useCallback((value: string) => {
@@ -85,8 +106,13 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
 
   const handleAssign = (patientId: string) => {
     setAssignError(null);
+    const targetDoctorId = isSecretary || isAdmin ? selectedDoctorId : currentDoctorId;
+    if ((isSecretary || isAdmin) && !targetDoctorId) {
+      setAssignError("Veuillez sélectionner un médecin");
+      return;
+    }
     startTransition(async () => {
-      const result = await assignPatientToDoctor(patientId, currentDoctorId);
+      const result = await assignPatientToDoctor(patientId, targetDoctorId);
       if (result.success) {
         setAssignedIds((prev) => new Set(prev).add(patientId));
         setSearchResults((prev) => prev.filter((p) => p.id !== patientId));
@@ -96,16 +122,17 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
     });
   };
 
-  // ── Styles communs ──────────────────────────────────────────
   const inputCls =
     "w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-600 " +
     "bg-zinc-50 dark:bg-zinc-700/50 text-sm text-zinc-900 dark:text-zinc-100 " +
     "placeholder-zinc-400 dark:placeholder-zinc-500 outline-none " +
     "focus:ring-2 focus:ring-medical-500 focus:border-medical-500 transition-all";
 
+  const showAssignSection = !isAdmin; // shown for DOCTOR and SECRETARY
+
   return (
     <div className="space-y-6">
-      {/* ── Section 1 : Filtre des patients assignés ── */}
+      {/* ── Filtre des patients ── */}
       <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
@@ -113,7 +140,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
             type="text"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
-            placeholder="Filtrer mes patients par nom ou email…"
+            placeholder={isSecretary ? "Filtrer les patients par nom ou email…" : "Filtrer mes patients par nom ou email…"}
             className={inputCls}
           />
           {filterQuery && (
@@ -132,7 +159,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
         )}
       </div>
 
-      {/* ── Liste des patients filtrés ── */}
+      {/* ── Liste des patients ── */}
       {patients.length > 0 && (
         filteredPatients.length === 0 ? (
           <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-8 text-center">
@@ -144,7 +171,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
             {filteredPatients.map((patient) => {
               const initials = `${patient.firstName[0]}${patient.lastName[0]}`;
               const prescCount = patient._count.prescriptionsAsPatient;
-              const doctors = patient.assignedDoctors;
+              const doctorsList = patient.assignedDoctors;
 
               return (
                 <Link
@@ -173,10 +200,10 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
                       <FileText className="w-3.5 h-3.5" />
                       {prescCount} prescription{prescCount !== 1 ? "s" : ""}
                     </div>
-                    {doctors.length > 0 && (
+                    {doctorsList.length > 0 && (
                       <div className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5" />
-                        {doctors.map((d) => `Dr. ${d.doctor.lastName}`).join(", ")}
+                        {doctorsList.map((d) => `Dr. ${d.doctor.lastName}`).join(", ")}
                       </div>
                     )}
                   </div>
@@ -187,15 +214,40 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
         )
       )}
 
-      {/* ── Section 2 : Assigner un patient existant (DOCTOR uniquement) ── */}
-      {!isAdmin && (
+      {/* ── Assigner un patient à un médecin ── */}
+      {showAssignSection && (
         <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
           <div className="flex items-center gap-2 mb-4">
             <UserPlus className="w-4 h-4 text-medical-600" />
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-              Ajouter un patient existant à ma patientèle
+              Ajouter un patient existant à la patientèle
             </h2>
           </div>
+
+          {/* Sélection du médecin (SECRETARY uniquement) */}
+          {isSecretary && (
+            <div className="mb-3">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 mb-1.5">
+                <Stethoscope className="w-3.5 h-3.5" />
+                Médecin
+              </label>
+              <div className="relative">
+                <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <select
+                  value={selectedDoctorId}
+                  onChange={(e) => setSelectedDoctorId(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-700/50 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-medical-500 focus:border-medical-500 transition-all"
+                >
+                  <option value="">Sélectionner un médecin…</option>
+                  {doctors.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      Dr. {d.firstName} {d.lastName}{d.speciality ? ` — ${d.speciality}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
@@ -203,7 +255,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
               type="text"
               value={assignQuery}
               onChange={(e) => handleAssignSearch(e.target.value)}
-              placeholder="Rechercher par nom ou email…"
+              placeholder="Rechercher patient par nom ou email…"
               className={inputCls}
             />
             {isSearching && (
@@ -257,7 +309,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
                       ) : isPending ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> En cours…</>
                       ) : (
-                        <><UserPlus className="w-3.5 h-3.5" /> Ajouter</>
+                        <><UserPlus className="w-3.5 h-3.5" /> Assigner</>
                       )}
                     </button>
                   </li>
@@ -268,7 +320,7 @@ export function PatientSearchAssign({ patients, currentDoctorId, isAdmin }: Prop
 
           {assignQuery.trim().length >= 2 && !isSearching && searchResults.length === 0 && (
             <p className="mt-3 text-xs text-zinc-400 dark:text-zinc-500 text-center py-2">
-              Aucun patient non assigné trouvé pour &laquo;&nbsp;{assignQuery}&nbsp;&raquo;
+              Aucun patient trouvé pour &laquo;&nbsp;{assignQuery}&nbsp;&raquo;
             </p>
           )}
 

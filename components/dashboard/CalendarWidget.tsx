@@ -9,6 +9,7 @@ interface ExamEvent {
   date: Date;
   examType: string;
   patientName?: string;
+  doctorName?: string;
 }
 
 interface Props {
@@ -168,6 +169,9 @@ export function CalendarWidget({ scheduledDates }: Props) {
                     <div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{ev.examType}</div>
                     {ev.patientName && (
                       <div className="text-xs text-zinc-500 dark:text-zinc-400">{ev.patientName}</div>
+                    )}
+                    {ev.doctorName && (
+                      <div className="text-xs text-zinc-400">{ev.doctorName}</div>
                     )}
                   </div>
                 </Link>

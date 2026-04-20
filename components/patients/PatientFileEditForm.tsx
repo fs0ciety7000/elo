@@ -6,6 +6,7 @@ import { Save, Loader2, Pencil, CheckCircle, X } from "lucide-react";
 
 type PatientData = {
   id: string;
+  email?: string | null;
   phone?: string | null;
   nationalId?: string | null;
   birthDate?: Date | null;
@@ -36,6 +37,7 @@ export function PatientFileEditForm({
   };
 
   const [form, setForm] = useState({
+    email: patient.email ?? "",
     phone: patient.phone ?? "",
     nationalId: patient.nationalId ?? "",
     birthDate: toDateString(patient.birthDate),
@@ -91,6 +93,11 @@ export function PatientFileEditForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-zinc-500 mb-1">Adresse email</label>
+          <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="patient@exemple.com" />
+        </div>
+
         <div>
           <label className="block text-xs font-medium text-zinc-500 mb-1">Téléphone</label>
           <input value={form.phone} onChange={(e) => set("phone", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="+32 470 00 00 00" />

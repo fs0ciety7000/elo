@@ -234,7 +234,7 @@ export default async function PatientFilePage({
 
         {/* ── Colonne centrale : édition dossier ── */}
         <div className="space-y-4">
-          <PatientFileEditForm patient={patient} isSecretary={isSecretary} />
+          <PatientFileEditForm patient={{ ...patient }} isSecretary={isSecretary} />
 
           {/* Notes privées du médecin — DOCTOR uniquement */}
           {session.role === Role.DOCTOR && (() => {

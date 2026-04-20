@@ -74,6 +74,8 @@ export default async function DashboardPage() {
   };
 
   const isDoctor = session.role === Role.DOCTOR || session.role === Role.ADMIN;
+  const isSecretary = session.role === Role.SECRETARY;
+  const isStaff = isDoctor || isSecretary;
 
   // Examens planifiés avec date pour le calendrier
   const scheduledWithDates = prescriptions
@@ -82,8 +84,11 @@ export default async function DashboardPage() {
       date: p.scheduledDate as Date,
       examType: p.examType,
       id: p.id,
-      patientName: isDoctor
+      patientName: isStaff
         ? `${p.patient.firstName} ${p.patient.lastName}`
+        : undefined,
+      doctorName: isStaff && p.doctor
+        ? `Dr. ${p.doctor.firstName} ${p.doctor.lastName}`
         : undefined,
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -140,6 +145,8 @@ export default async function DashboardPage() {
               {ROLE_LABELS[session.role]} ·{" "}
               {isDoctor
                 ? "Gérez les prescriptions de vos patients"
+                : isSecretary
+                ? "Gérez les rendez-vous et les dossiers patients"
                 : "Suivez vos examens radiologiques"}
             </p>
           </div>
@@ -151,6 +158,14 @@ export default async function DashboardPage() {
             >
               <Plus className="w-4 h-4" />
               Nouvelle prescription
+            </Link>
+          ) : isSecretary ? (
+            <Link
+              href="/dashboard/rendez-vous/new"
+              className="inline-flex items-center gap-2 bg-medical-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-medical-700 transition-all w-fit"
+            >
+              <Plus className="w-4 h-4" />
+              Nouveau rendez-vous
             </Link>
           ) : (
             <Link
@@ -179,7 +194,7 @@ export default async function DashboardPage() {
         <div className="xl:col-span-2 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50">
           <div className="p-5 border-b border-zinc-100 dark:border-zinc-700 flex items-center justify-between">
             <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">
-              {isDoctor ? "Prescriptions récentes émises" : "Mes examens"}
+              {isDoctor ? "Prescriptions récentes émises" : isSecretary ? "Rendez-vous récents" : "Mes examens"}
             </h2>
             <Link
               href="/dashboard/prescriptions"
@@ -234,11 +249,12 @@ export default async function DashboardPage() {
                       )}
                     </div>
                     <div className="text-xs text-zinc-400 truncate">
-                      {isDoctor
+                      {isStaff
                         ? `${prescription.patient.firstName} ${prescription.patient.lastName}`
                         : prescription.doctor
                         ? `Dr. ${prescription.doctor.firstName} ${prescription.doctor.lastName}`
                         : "Auto-soumission"}
+                      {isSecretary && prescription.doctor && ` · Dr. ${prescription.doctor.lastName}`}
                       {" · "}
                       {formatDate(prescription.createdAt)}
                     </div>
@@ -291,8 +307,13 @@ export default async function DashboardPage() {
                         </div>
                         <div className="text-xs text-zinc-400 truncate">
                           {exam.patientName && (
-                            <span className="font-medium text-zinc-500 dark:text-zinc-400">{exam.patientName} · </span>
+                            <span className="font-medium text-zinc-500 dark:text-zinc-400">{exam.patientName}</span>
                           )}
+                          {exam.patientName && exam.doctorName && " · "}
+                          {exam.doctorName && (
+                            <span>{exam.doctorName}</span>
+                          )}
+                          {(exam.patientName || exam.doctorName) && " · "}
                           {d.toLocaleDateString("fr-BE", {
                             weekday: "short",
                             hour: "2-digit",

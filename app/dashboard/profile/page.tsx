@@ -69,6 +69,7 @@ export default async function ProfilePage() {
 
   const isDoctor = user.role === Role.DOCTOR || user.role === Role.ADMIN;
   const isAdmin = user.role === Role.ADMIN;
+  const isSecretary = user.role === Role.SECRETARY;
 
   return (
     <div className="p-8 max-w-4xl">
@@ -126,24 +127,26 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex gap-6 text-center">
-              <div>
-                <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                  {user._count.prescriptionsAsPatient}
-                </div>
-                <div className="text-xs text-zinc-400">
-                  {isDoctor ? "Reçues" : "Prescriptions"}
-                </div>
-              </div>
-              {isDoctor && (
+            {!isSecretary && (
+              <div className="flex gap-6 text-center">
                 <div>
                   <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                    {user._count.prescriptionsAsDoctor}
+                    {user._count.prescriptionsAsPatient}
                   </div>
-                  <div className="text-xs text-zinc-400">Émises</div>
+                  <div className="text-xs text-zinc-400">
+                    {isDoctor ? "Reçues" : "Prescriptions"}
+                  </div>
                 </div>
-              )}
-            </div>
+                {isDoctor && (
+                  <div>
+                    <div className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                      {user._count.prescriptionsAsDoctor}
+                    </div>
+                    <div className="text-xs text-zinc-400">Émises</div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -199,8 +202,8 @@ export default async function ProfilePage() {
           </div>
         )}
 
-        {/* ── Activité (patient) ── */}
-        {!isDoctor && (
+        {/* ── Activité (patient uniquement) ── */}
+        {!isDoctor && !isSecretary && (
           <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-6">
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-medical-600" />

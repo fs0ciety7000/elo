@@ -98,6 +98,7 @@ export async function getPatientFile(patientId: string) {
 }
 
 const UpdatePatientSchema = z.object({
+  email: z.string().email("Email invalide").optional(),
   phone: z.string().optional(),
   nationalId: z.string().optional(),
   birthDate: z.string().optional(),
@@ -120,6 +121,7 @@ export async function updatePatientFile(
     return { success: false, message: "Accès non autorisé" };
   }
   const rawData = {
+    email: formData.get("email") ?? undefined,
     phone: formData.get("phone") ?? undefined,
     nationalId: formData.get("nationalId") ?? undefined,
     birthDate: formData.get("birthDate") ?? undefined,
@@ -133,12 +135,22 @@ export async function updatePatientFile(
   const validation = UpdatePatientSchema.safeParse(rawData);
   if (!validation.success) return { success: false, message: "Données invalides" };
 
-  // SECRETARY can only update contact/admin info, not clinical data
   const isSecretary = session.role === Role.SECRETARY;
+  const newEmail = (validation.data.email as string) || undefined;
+
+  // Check email uniqueness if changed
+  if (newEmail) {
+    const conflict = await prisma.user.findFirst({
+      where: { email: newEmail, NOT: { id: patientId } },
+    });
+    if (conflict) return { success: false, message: "Cet email est déjà utilisé par un autre compte" };
+  }
+
   try {
     await prisma.user.update({
       where: { id: patientId },
       data: {
+        ...(newEmail ? { email: newEmail } : {}),
         phone: (validation.data.phone as string) || null,
         nationalId: (validation.data.nationalId as string) || null,
         birthDate: validation.data.birthDate ? new Date(validation.data.birthDate as string) : null,
@@ -165,8 +177,12 @@ export async function assignPatientToDoctor(
   doctorId: string
 ): Promise<ActionResult> {
   try {
-    const session = await requireDoctorOrAdmin();
-    const targetDoctorId = session.role === Role.ADMIN ? doctorId : session.id;
+    const session = await requireStaff();
+    // ADMIN and SECRETARY use the provided doctorId; DOCTOR assigns to themselves
+    const targetDoctorId =
+      session.role === Role.ADMIN || session.role === Role.SECRETARY
+        ? doctorId
+        : session.id;
     await prisma.doctorPatient.upsert({
       where: { doctorId_patientId: { doctorId: targetDoctorId, patientId } },
       update: {},
@@ -266,9 +282,10 @@ export async function createPatientAccount(
 
 export async function getDoctors() {
   const session = await getSession();
-  if (!session || session.role !== Role.ADMIN) return [];
+  if (!session || session.role === Role.PATIENT) return [];
+  // ADMIN and SECRETARY see all doctors; DOCTOR only visible to themselves (not needed but consistent)
   return await prisma.user.findMany({
-    where: { role: { in: [Role.DOCTOR, Role.ADMIN] } },
+    where: { role: Role.DOCTOR },
     select: { id: true, firstName: true, lastName: true, speciality: true },
     orderBy: { lastName: "asc" },
   });
