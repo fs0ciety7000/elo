@@ -79,7 +79,7 @@ export default async function PrescriptionDetailPage({
     (session.role === Role.DOCTOR && prescription.doctorId === session.id);
 
   // Les notes du médecin sont masquées pour le patient
-  const canSeeNotes = session.role !== Role.PATIENT;
+  const canSeeNotes = session.role === Role.DOCTOR || session.role === Role.ADMIN;
 
   return (
     <div className="p-8 max-w-4xl">
