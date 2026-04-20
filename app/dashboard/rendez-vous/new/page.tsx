@@ -10,14 +10,22 @@ import { getDoctors, getPatients } from "@/lib/actions/patients";
 import { NewAppointmentForm } from "@/components/prescriptions/NewAppointmentForm";
 import { Calendar } from "lucide-react";
 
-export default async function NewAppointmentPage() {
+export default async function NewAppointmentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ patientId?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== Role.SECRETARY && session.role !== Role.ADMIN) {
     redirect("/dashboard");
   }
 
-  const [doctors, patients] = await Promise.all([getDoctors(), getPatients()]);
+  const [doctors, patients, { patientId: initialPatientId }] = await Promise.all([
+    getDoctors(),
+    getPatients(),
+    searchParams,
+  ]);
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
@@ -31,7 +39,7 @@ export default async function NewAppointmentPage() {
         </p>
       </div>
 
-      <NewAppointmentForm doctors={doctors} patients={patients} />
+      <NewAppointmentForm doctors={doctors} patients={patients} initialPatientId={initialPatientId} />
     </div>
   );
 }

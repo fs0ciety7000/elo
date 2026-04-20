@@ -35,6 +35,7 @@ interface PatientOption {
 interface Props {
   doctors: DoctorOption[];
   patients: PatientOption[];
+  initialPatientId?: string;
 }
 
 const EXAM_SUGGESTIONS = [
@@ -50,14 +51,14 @@ const EXAM_SUGGESTIONS = [
   "PET Scan",
 ];
 
-export function NewAppointmentForm({ doctors, patients }: Props) {
+export function NewAppointmentForm({ doctors, patients, initialPatientId }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [form, setForm] = useState({
     doctorId: "",
-    patientId: "",
+    patientId: initialPatientId ?? "",
     examType: "",
     examDetails: "",
     scheduledDate: "",

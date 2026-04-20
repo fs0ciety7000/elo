@@ -9,7 +9,7 @@ import { useState, useTransition } from "react";
 import { PrescriptionStatus } from "@prisma/client";
 import { updatePrescriptionStatus } from "@/lib/actions/prescriptions";
 import { STATUS_LABELS } from "@/lib/utils";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 
 interface StatusUpdateFormProps {
   prescriptionId: string;
@@ -32,11 +32,18 @@ export function StatusUpdateForm({
   const [scheduledDate, setScheduledDate] = useState("");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+
+    if (selectedStatus === "CANCELLED" && !showCancelConfirm) {
+      setShowCancelConfirm(true);
+      return;
+    }
+    setShowCancelConfirm(false);
 
     startTransition(async () => {
       const result = await updatePrescriptionStatus(
@@ -70,7 +77,33 @@ export function StatusUpdateForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {showCancelConfirm && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm">
+          <div className="flex items-center gap-2 text-red-700 font-semibold mb-2">
+            <AlertTriangle className="w-4 h-4" />
+            Confirmer l&apos;annulation
+          </div>
+          <p className="text-red-600 mb-3">Cette action va marquer le rendez-vous comme annulé. Continuer ?</p>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              form="status-form"
+              className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-all"
+            >
+              Oui, annuler
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowCancelConfirm(false); setSelectedStatus(currentStatus); }}
+              className="flex-1 py-2 bg-white border border-zinc-200 text-zinc-700 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-all"
+            >
+              Non, revenir
+            </button>
+          </div>
+        </div>
+      )}
+
+      <form id="status-form" onSubmit={handleSubmit} className="space-y-4">
         {/* Sélection du statut */}
         <div className="grid grid-cols-2 gap-2">
           {STATUS_OPTIONS.map((option) => (

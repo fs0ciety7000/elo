@@ -17,20 +17,32 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json({ patients: [], prescriptions: [] });
 
-  const isDoctor  = session.role === Role.DOCTOR || session.role === Role.ADMIN;
-  const isPatient = session.role === Role.PATIENT;
+  const isPatient   = session.role === Role.PATIENT;
+  const isDoctor    = session.role === Role.DOCTOR || session.role === Role.ADMIN;
+  const isSecretary = session.role === Role.SECRETARY;
+  const isStaff     = isDoctor || isSecretary;
+
+  // Filtre prescriptions selon le rôle
+  const prescWhere = isPatient
+    ? { patientId: session.id }
+    : isDoctor
+    ? { doctorId: session.id }
+    : { doctorId: { not: null } }; // SECRETARY / ADMIN: exclut auto-soumissions patient
 
   // ── Recherche prescriptions ────────────────────────────────
   const prescriptions = await prisma.prescription.findMany({
     where: {
       AND: [
-        isPatient ? { patientId: session.id } : {},
-        isDoctor  ? { doctorId: session.id }  : {},
+        { ...prescWhere, deletedAt: null },
         {
           OR: [
             { examType:   { contains: q, mode: "insensitive" } },
             { diagnosis:  { contains: q, mode: "insensitive" } },
             { examDetails:{ contains: q, mode: "insensitive" } },
+            { patient: { OR: [
+              { firstName: { contains: q, mode: "insensitive" } },
+              { lastName:  { contains: q, mode: "insensitive" } },
+            ]}},
           ],
         },
       ],
@@ -46,9 +58,9 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  // ── Recherche patients (médecin/admin uniquement) ──────────
+  // ── Recherche patients (staff uniquement) ──────────────────
   let patients: { id: string; firstName: string; lastName: string; email: string }[] = [];
-  if (isDoctor) {
+  if (isStaff) {
     patients = await prisma.user.findMany({
       where: {
         role: Role.PATIENT,

@@ -294,10 +294,14 @@ export default async function PatientFilePage({
                 <FileText className="w-4 h-4 text-zinc-500" /> Historique
               </h2>
               <Link
-                href={`/dashboard/prescriptions/new?patientEmail=${encodeURIComponent(patient.email)}`}
+                href={
+                  isSecretary
+                    ? `/dashboard/rendez-vous/new?patientId=${patient.id}`
+                    : `/dashboard/prescriptions/new?patientEmail=${encodeURIComponent(patient.email)}`
+                }
                 className="text-xs text-medical-600 hover:text-medical-700 font-medium flex items-center gap-1"
               >
-                <Plus className="w-3 h-3" /> Nouvelle
+                <Plus className="w-3 h-3" /> {isSecretary ? "Nouveau RDV" : "Nouvelle"}
               </Link>
             </div>
 

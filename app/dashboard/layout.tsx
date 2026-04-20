@@ -20,6 +20,7 @@ import {
   Users,
   Stethoscope,
   Calendar,
+  ClipboardList,
 } from "lucide-react";
 import { Role } from "@prisma/client";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
@@ -60,6 +61,14 @@ function getNavLinks(role: Role): { href: string; label: string; icon: IconName 
     });
   }
 
+  if (role === Role.ADMIN) {
+    common.push({
+      href: "/dashboard/audit",
+      label: "Journal d'audit",
+      icon: "ClipboardList",
+    });
+  }
+
   if (role === Role.SECRETARY) {
     common.splice(2, 0, {
       href: "/dashboard/rendez-vous/new",
@@ -77,7 +86,7 @@ function getNavLinks(role: Role): { href: string; label: string; icon: IconName 
 }
 
 // Résolution icône pour la sidebar server-side
-const ICON_COMPONENTS = { LayoutDashboard, FileText, ScanLine, User, Users, Stethoscope, Calendar } as const;
+const ICON_COMPONENTS = { LayoutDashboard, FileText, ScanLine, User, Users, Stethoscope, Calendar, ClipboardList } as const;
 
 // ── Composant Layout ─────────────────────────────────────────
 export default async function DashboardLayout({

@@ -37,7 +37,7 @@ export default async function PrescriptionDetailPage({
 
   // Récupération de la prescription avec les relations
   const prescription = await prisma.prescription.findUnique({
-    where: { id },
+    where: { id, deletedAt: null },
     include: {
       patient: {
         select: {
@@ -65,6 +65,8 @@ export default async function PrescriptionDetailPage({
     redirect("/dashboard");
   }
 
+  const isSecretary = session.role === Role.SECRETARY;
+
   // SECRETARY: can view and update status only
   const canUpdateStatus =
     session.role === Role.DOCTOR ||
@@ -85,18 +87,20 @@ export default async function PrescriptionDetailPage({
       <div className="mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
-                {prescription.source === "OCR" ? (
-                  <ScanLine className="w-4 h-4 text-zinc-600" />
-                ) : (
-                  <FileText className="w-4 h-4 text-zinc-600" />
-                )}
+            {!isSecretary && (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
+                  {prescription.source === "OCR" ? (
+                    <ScanLine className="w-4 h-4 text-zinc-600" />
+                  ) : (
+                    <FileText className="w-4 h-4 text-zinc-600" />
+                  )}
+                </div>
+                <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
+                  {prescription.source === "OCR" ? "Numérisation OCR" : "Encodage manuel"}
+                </span>
               </div>
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
-                {prescription.source === "OCR" ? "Numérisation OCR" : "Encodage manuel"}
-              </span>
-            </div>
+            )}
             <h1 className="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100">
               {prescription.examType}
             </h1>

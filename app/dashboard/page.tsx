@@ -100,9 +100,9 @@ export default async function DashboardPage() {
     (p) => new Date(p.date) >= now && new Date(p.date) <= in30
   );
 
-  // ── Données analytiques (médecins uniquement) ───────────────
+  // ── Données analytiques (médecins + secrétaires) ───────────
   const MONTH_SHORT = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
-  const analyticsMonthly = isDoctor
+  const analyticsMonthly = isStaff
     ? Array.from({ length: 6 }, (_, i) => {
         const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
         const y = d.getFullYear(), m = d.getMonth();
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
       })
     : [];
 
-  const analyticsExamTypes = isDoctor
+  const analyticsExamTypes = isStaff
     ? Object.entries(
         prescriptions.reduce<Record<string, number>>((acc, p) => {
           acc[p.examType] = (acc[p.examType] ?? 0) + 1;
@@ -331,8 +331,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Analytics médecin ── */}
-      {isDoctor && (
+      {/* ── Analytics staff ── */}
+      {isStaff && (
         <AnalyticsCharts monthly={analyticsMonthly} examTypes={analyticsExamTypes} />
       )}
     </div>

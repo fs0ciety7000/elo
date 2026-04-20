@@ -72,6 +72,7 @@ export async function getPatientFile(patientId: string) {
       where: { id: patientId, role: Role.PATIENT },
       include: {
         prescriptionsAsPatient: {
+          where: { deletedAt: null },
           include: {
             doctor: { select: { firstName: true, lastName: true, speciality: true } },
           },

@@ -196,7 +196,7 @@ export async function updatePrescriptionStatus(
 
   try {
     const prescription = await prisma.prescription.findUnique({
-      where: { id: prescriptionId },
+      where: { id: prescriptionId, deletedAt: null },
       include: { patient: true, doctor: true },
     });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
@@ -286,7 +286,7 @@ export async function editPrescription(
   }
 
   try {
-    const prescription = await prisma.prescription.findUnique({ where: { id } });
+    const prescription = await prisma.prescription.findUnique({ where: { id, deletedAt: null } });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
 
     // Seuls les médecins et admins peuvent modifier le contenu d'une prescription
@@ -361,7 +361,7 @@ export async function deletePrescription(id: string): Promise<ActionResult> {
   if (!session) return { success: false, message: "Non authentifié" };
 
   try {
-    const prescription = await prisma.prescription.findUnique({ where: { id } });
+    const prescription = await prisma.prescription.findUnique({ where: { id, deletedAt: null } });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
 
     // Contrôle d'accès
@@ -372,7 +372,18 @@ export async function deletePrescription(id: string): Promise<ActionResult> {
       return { success: false, message: "Accès non autorisé" };
     }
 
-    await prisma.prescription.delete({ where: { id } });
+    // Soft-delete : on marque deletedAt plutôt que de supprimer physiquement
+    await prisma.prescription.update({ where: { id }, data: { deletedAt: new Date() } });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.id,
+        action: "DELETE_PRESCRIPTION",
+        entity: "Prescription",
+        entityId: id,
+        metadata: { examType: prescription.examType, softDelete: true },
+      },
+    });
 
     revalidatePath("/dashboard/prescriptions");
     revalidatePath("/dashboard");
@@ -390,7 +401,7 @@ export async function getUserPrescriptions() {
   if (!session) return [];
 
   try {
-    const where =
+    const roleWhere =
       session.role === Role.PATIENT
         ? { patientId: session.id }
         : session.role === Role.DOCTOR
@@ -398,7 +409,7 @@ export async function getUserPrescriptions() {
         : { doctorId: { not: null } }; // ADMIN/SECRETARY: exclude patient self-uploads
 
     return await prisma.prescription.findMany({
-      where,
+      where: { ...roleWhere, deletedAt: null },
       include: {
         patient: { select: { firstName: true, lastName: true, email: true } },
         doctor: { select: { firstName: true, lastName: true, speciality: true } },

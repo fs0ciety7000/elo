@@ -33,7 +33,7 @@ interface SearchResults {
 }
 
 interface CommandMenuProps {
-  role: "ADMIN" | "DOCTOR" | "PATIENT";
+  role: "ADMIN" | "DOCTOR" | "PATIENT" | "SECRETARY";
 }
 
 export function CommandMenu({ role }: CommandMenuProps) {
@@ -78,7 +78,9 @@ export function CommandMenu({ role }: CommandMenuProps) {
     router.push(href);
   }
 
-  const isDoctor = role === "DOCTOR" || role === "ADMIN";
+  const isDoctor    = role === "DOCTOR" || role === "ADMIN";
+  const isSecretary = role === "SECRETARY";
+  const isStaff     = isDoctor || isSecretary;
 
   if (!open) return (
     <button
@@ -132,8 +134,9 @@ export function CommandMenu({ role }: CommandMenuProps) {
               <Item icon={<LayoutDashboard className="w-4 h-4" />} label="Tableau de bord" onSelect={() => go("/dashboard")} />
               <Item icon={<FileText className="w-4 h-4" />} label="Mes prescriptions" onSelect={() => go("/dashboard/prescriptions")} />
               {role === "PATIENT" && <Item icon={<ScanLine className="w-4 h-4" />} label="Numériser une ordonnance" onSelect={() => go("/dashboard/upload")} />}
-              {isDoctor && <Item icon={<Users className="w-4 h-4" />} label="Patients" onSelect={() => go("/dashboard/patients")} />}
+              {isStaff && <Item icon={<Users className="w-4 h-4" />} label="Patients" onSelect={() => go("/dashboard/patients")} />}
               {isDoctor && <Item icon={<Plus className="w-4 h-4" />} label="Nouvelle prescription" onSelect={() => go("/dashboard/prescriptions/new")} />}
+              {isSecretary && <Item icon={<Plus className="w-4 h-4" />} label="Nouveau rendez-vous" onSelect={() => go("/dashboard/rendez-vous/new")} />}
             </Command.Group>
           )}
 

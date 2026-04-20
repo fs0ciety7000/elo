@@ -123,6 +123,8 @@ model Prescription {
   doctorId        String?
   doctor          User?    @relation("DoctorPrescriptions", fields: [doctorId], references: [id], onDelete: SetNull)
 
+  deletedAt       DateTime?  // Soft-delete : null = actif, non-null = supprimé
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
