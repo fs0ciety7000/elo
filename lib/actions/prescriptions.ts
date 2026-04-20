@@ -184,8 +184,8 @@ export async function updatePrescriptionStatus(
     });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
 
-    // Le patient ne peut modifier que ses propres prescriptions
-    if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
+    // Seuls les médecins, admins et secrétaires peuvent modifier le statut
+    if (session.role === Role.PATIENT) {
       return { success: false, message: "Accès non autorisé" };
     }
 
@@ -272,8 +272,8 @@ export async function editPrescription(
     const prescription = await prisma.prescription.findUnique({ where: { id } });
     if (!prescription) return { success: false, message: "Prescription introuvable" };
 
-    // Contrôle d'accès
-    if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
+    // Seuls les médecins et admins peuvent modifier le contenu d'une prescription
+    if (session.role === Role.PATIENT || session.role === Role.SECRETARY) {
       return { success: false, message: "Accès non autorisé" };
     }
     if (session.role === Role.DOCTOR && prescription.doctorId !== session.id) {
@@ -378,7 +378,7 @@ export async function getUserPrescriptions() {
         ? { patientId: session.id }
         : session.role === Role.DOCTOR
         ? { doctorId: session.id }
-        : {};
+        : {}; // ADMIN and SECRETARY see all
 
     return await prisma.prescription.findMany({
       where,

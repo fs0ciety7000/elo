@@ -75,6 +75,8 @@ export default async function PatientFilePage({
   if (!session) redirect("/login");
   if (session.role === Role.PATIENT) redirect("/dashboard");
 
+  const isSecretary = session.role === Role.SECRETARY;
+
   const patient = await getPatientFile(params.id);
   if (!patient) notFound();
 
@@ -157,8 +159,8 @@ export default async function PatientFilePage({
             </div>
           </div>
 
-          {/* Dossier médical — alertes */}
-          {(patient.allergies || patient.medicalHistory || patient.currentMeds) && (
+          {/* Dossier médical — alertes (masqué pour la secrétaire) */}
+          {!isSecretary && (patient.allergies || patient.medicalHistory || patient.currentMeds) && (
             <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
               <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
                 <Heart className="w-4 h-4 text-red-500" /> Dossier médical
@@ -167,6 +169,31 @@ export default async function PatientFilePage({
                 <InfoField icon={AlertTriangle} label="Allergies" value={patient.allergies} alert />
                 <InfoField icon={Clock} label="Antécédents médicaux" value={patient.medicalHistory} />
                 <InfoField icon={Pill} label="Traitements en cours" value={patient.currentMeds} />
+              </div>
+            </div>
+          )}
+
+          {/* Examens précédents — visible pour médecin et admin */}
+          {!isSecretary && completed.length > 0 && (
+            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-sm dark:shadow-zinc-900/50 p-5">
+              <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm mb-3 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" /> Examens précédents
+              </h2>
+              <div className="space-y-1.5">
+                {completed.slice(0, 5).map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/dashboard/prescriptions/${p.id}`}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors group text-sm"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                    <span className="text-zinc-700 dark:text-zinc-300 truncate flex-1">{p.examType}</span>
+                    <span className="text-xs text-zinc-400 flex-shrink-0">{formatDate(p.completedAt ?? p.createdAt)}</span>
+                  </Link>
+                ))}
+                {completed.length > 5 && (
+                  <p className="text-xs text-zinc-400 text-center pt-1">+{completed.length - 5} autres</p>
+                )}
               </div>
             </div>
           )}
@@ -207,9 +234,9 @@ export default async function PatientFilePage({
 
         {/* ── Colonne centrale : édition dossier ── */}
         <div className="space-y-4">
-          <PatientFileEditForm patient={patient} />
+          <PatientFileEditForm patient={patient} isSecretary={isSecretary} />
 
-          {/* Notes privées du médecin */}
+          {/* Notes privées du médecin — DOCTOR uniquement */}
           {session.role === Role.DOCTOR && (() => {
             const doctorAssignment = patient.assignedDoctors.find(
               (a) => a.doctorId === session.id

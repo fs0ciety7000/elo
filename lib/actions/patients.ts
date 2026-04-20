@@ -20,11 +20,18 @@ async function requireDoctorOrAdmin() {
   return session;
 }
 
+async function requireStaff() {
+  const session = await getSession();
+  if (!session) throw new Error("Non authentifié");
+  if (session.role === Role.PATIENT) throw new Error("Accès non autorisé");
+  return session;
+}
+
 export async function getPatients() {
   const session = await getSession();
   if (!session || session.role === Role.PATIENT) return [];
   try {
-    if (session.role === Role.ADMIN) {
+    if (session.role === Role.ADMIN || session.role === Role.SECRETARY) {
       return await prisma.user.findMany({
         where: { role: Role.PATIENT },
         include: {
@@ -82,6 +89,7 @@ export async function getPatientFile(patientId: string) {
       const isAssigned = patient.assignedDoctors.some((a) => a.doctorId === session.id);
       if (!isAssigned) return null;
     }
+    // SECRETARY has full read access to all patients
     return patient;
   } catch (error) {
     console.error("[getPatientFile] Erreur :", error);
@@ -90,6 +98,7 @@ export async function getPatientFile(patientId: string) {
 }
 
 const UpdatePatientSchema = z.object({
+  phone: z.string().optional(),
   nationalId: z.string().optional(),
   birthDate: z.string().optional(),
   address: z.string().optional(),
@@ -104,12 +113,14 @@ export async function updatePatientFile(
   patientId: string,
   formData: FormData
 ): Promise<ActionResult> {
+  let session;
   try {
-    await requireDoctorOrAdmin();
+    session = await requireStaff();
   } catch {
     return { success: false, message: "Accès non autorisé" };
   }
   const rawData = {
+    phone: formData.get("phone") ?? undefined,
     nationalId: formData.get("nationalId") ?? undefined,
     birthDate: formData.get("birthDate") ?? undefined,
     address: formData.get("address") ?? undefined,
@@ -121,17 +132,23 @@ export async function updatePatientFile(
   };
   const validation = UpdatePatientSchema.safeParse(rawData);
   if (!validation.success) return { success: false, message: "Données invalides" };
+
+  // SECRETARY can only update contact/admin info, not clinical data
+  const isSecretary = session.role === Role.SECRETARY;
   try {
     await prisma.user.update({
       where: { id: patientId },
       data: {
+        phone: (validation.data.phone as string) || null,
         nationalId: (validation.data.nationalId as string) || null,
         birthDate: validation.data.birthDate ? new Date(validation.data.birthDate as string) : null,
         address: (validation.data.address as string) || null,
-        bloodType: (validation.data.bloodType as string) || null,
-        allergies: (validation.data.allergies as string) || null,
-        medicalHistory: (validation.data.medicalHistory as string) || null,
-        currentMeds: (validation.data.currentMeds as string) || null,
+        ...(isSecretary ? {} : {
+          bloodType: (validation.data.bloodType as string) || null,
+          allergies: (validation.data.allergies as string) || null,
+          medicalHistory: (validation.data.medicalHistory as string) || null,
+          currentMeds: (validation.data.currentMeds as string) || null,
+        }),
         emergencyContact: (validation.data.emergencyContact as string) || null,
       },
     });
@@ -193,7 +210,7 @@ export async function createPatientAccount(
 ): Promise<ActionResult<{ id: string }>> {
   let session;
   try {
-    session = await requireDoctorOrAdmin();
+    session = await requireStaff();
   } catch {
     return { success: false, message: "Accès non autorisé" };
   }
@@ -226,9 +243,11 @@ export async function createPatientAccount(
       await prisma.doctorPatient.create({ data: { doctorId: session.id, patientId: patient.id } });
     }
 
-    // Email de création de compte par le médecin (non bloquant)
+    // Email de création de compte (non bloquant)
     const doctorName = session.role === Role.DOCTOR
       ? `Dr. ${session.firstName} ${session.lastName}`
+      : session.role === Role.SECRETARY
+      ? `${session.firstName} ${session.lastName} (Secrétariat)`
       : "Antigravity Medical";
     sendPatientAccountCreatedEmail(patient.email, {
       patientName: `${patient.firstName} ${patient.lastName}`,

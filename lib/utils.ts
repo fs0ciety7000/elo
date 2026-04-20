@@ -27,6 +27,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMIN: "Administrateur",
   DOCTOR: "Prestataire Médical",
   PATIENT: "Patient",
+  SECRETARY: "Secrétaire",
 };
 
 // ── Libellés des statuts de prescription ────────────────────

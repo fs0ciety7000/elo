@@ -6,6 +6,7 @@ import { Save, Loader2, Pencil, CheckCircle, X } from "lucide-react";
 
 type PatientData = {
   id: string;
+  phone?: string | null;
   nationalId?: string | null;
   birthDate?: Date | null;
   address?: string | null;
@@ -18,7 +19,13 @@ type PatientData = {
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-export function PatientFileEditForm({ patient }: { patient: PatientData }) {
+export function PatientFileEditForm({
+  patient,
+  isSecretary = false,
+}: {
+  patient: PatientData;
+  isSecretary?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -29,6 +36,7 @@ export function PatientFileEditForm({ patient }: { patient: PatientData }) {
   };
 
   const [form, setForm] = useState({
+    phone: patient.phone ?? "",
     nationalId: patient.nationalId ?? "",
     birthDate: toDateString(patient.birthDate),
     address: patient.address ?? "",
@@ -63,7 +71,7 @@ export function PatientFileEditForm({ patient }: { patient: PatientData }) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-zinc-900 text-sm flex items-center gap-2">
           <Pencil className="w-4 h-4 text-medical-600" />
-          Dossier médical
+          {isSecretary ? "Informations administratives" : "Dossier médical"}
         </h2>
         {!isEditing && (
           <button
@@ -83,6 +91,11 @@ export function PatientFileEditForm({ patient }: { patient: PatientData }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-zinc-500 mb-1">Téléphone</label>
+          <input value={form.phone} onChange={(e) => set("phone", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="+32 470 00 00 00" />
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-zinc-500 mb-1">N° Registre national</label>
@@ -94,39 +107,44 @@ export function PatientFileEditForm({ patient }: { patient: PatientData }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1">Groupe sanguin</label>
-            <select value={form.bloodType} onChange={(e) => set("bloodType", e.target.value)} disabled={!isEditing} className={inputCls}>
-              <option value="">—</option>
-              {BLOOD_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1">Contact urgence</label>
-            <input value={form.emergencyContact} onChange={(e) => set("emergencyContact", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="Nom +32..." />
-          </div>
-        </div>
-
         <div>
           <label className="block text-xs font-medium text-zinc-500 mb-1">Adresse</label>
           <input value={form.address} onChange={(e) => set("address", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="Rue, Ville, Code postal" />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-red-500 mb-1">⚠ Allergies</label>
-          <textarea rows={2} value={form.allergies} onChange={(e) => set("allergies", e.target.value)} disabled={!isEditing} className={`${textareaCls} border-red-200 bg-red-50 focus:ring-red-400 focus:border-red-400`} placeholder="Pénicilline, Aspirine..." />
+          <label className="block text-xs font-medium text-zinc-500 mb-1">Contact urgence</label>
+          <input value={form.emergencyContact} onChange={(e) => set("emergencyContact", e.target.value)} disabled={!isEditing} className={inputCls} placeholder="Nom +32..." />
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Antécédents médicaux</label>
-          <textarea rows={3} value={form.medicalHistory} onChange={(e) => set("medicalHistory", e.target.value)} disabled={!isEditing} className={textareaCls} placeholder="Maladies chroniques, interventions chirurgicales..." />
-        </div>
+        {!isSecretary && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-zinc-500 mb-1">Groupe sanguin</label>
+                <select value={form.bloodType} onChange={(e) => set("bloodType", e.target.value)} disabled={!isEditing} className={inputCls}>
+                  <option value="">—</option>
+                  {BLOOD_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
 
-        <div>
-          <label className="block text-xs font-medium text-zinc-500 mb-1">Traitements en cours</label>
-          <textarea rows={2} value={form.currentMeds} onChange={(e) => set("currentMeds", e.target.value)} disabled={!isEditing} className={textareaCls} placeholder="Médicaments, posologies..." />
-        </div>
+            <div>
+              <label className="block text-xs font-medium text-red-500 mb-1">⚠ Allergies</label>
+              <textarea rows={2} value={form.allergies} onChange={(e) => set("allergies", e.target.value)} disabled={!isEditing} className={`${textareaCls} border-red-200 bg-red-50 focus:ring-red-400 focus:border-red-400`} placeholder="Pénicilline, Aspirine..." />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1">Antécédents médicaux</label>
+              <textarea rows={3} value={form.medicalHistory} onChange={(e) => set("medicalHistory", e.target.value)} disabled={!isEditing} className={textareaCls} placeholder="Maladies chroniques, interventions chirurgicales..." />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1">Traitements en cours</label>
+              <textarea rows={2} value={form.currentMeds} onChange={(e) => set("currentMeds", e.target.value)} disabled={!isEditing} className={textareaCls} placeholder="Médicaments, posologies..." />
+            </div>
+          </>
+        )}
 
         {isEditing && (
           <div className="flex gap-2 pt-1">

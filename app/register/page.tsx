@@ -22,6 +22,7 @@ import {
   Stethoscope,
   Users,
   CheckCircle,
+  ClipboardList,
 } from "lucide-react";
 import { registerUser } from "@/lib/actions/auth";
 
@@ -37,7 +38,7 @@ const RegisterSchema = z
       .regex(/[A-Z]/, "Au moins une majuscule requise")
       .regex(/[0-9]/, "Au moins un chiffre requis"),
     confirmPassword: z.string(),
-    role: z.enum(["PATIENT", "DOCTOR"]),
+    role: z.enum(["PATIENT", "DOCTOR", "SECRETARY"]),
     speciality: z.string().optional(),
     inami: z.string().optional(),
   })
@@ -63,6 +64,13 @@ const ROLES = [
     description: "Je prescris des examens à mes patients",
     icon: Stethoscope,
     color: "zinc",
+  },
+  {
+    value: "SECRETARY" as const,
+    label: "Secrétaire",
+    description: "Je gère les rendez-vous et les dossiers patients",
+    icon: ClipboardList,
+    color: "violet",
   },
 ];
 
@@ -155,41 +163,50 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-zinc-700 mb-2">
                 Je suis…
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {ROLES.map((role) => (
-                  <button
-                    key={role.value}
-                    type="button"
-                    onClick={() => setValue("role", role.value)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all
-                      ${
-                        selectedRole === role.value
-                          ? role.color === "medical"
-                            ? "border-medical-500 bg-medical-50"
-                            : "border-zinc-700 bg-zinc-50"
-                          : "border-zinc-200 hover:border-zinc-300"
-                      }`}
-                  >
-                    <role.icon
-                      className={`w-5 h-5 mb-2 ${
-                        selectedRole === role.value
-                          ? role.color === "medical"
-                            ? "text-medical-600"
-                            : "text-zinc-800"
-                          : "text-zinc-400"
-                      }`}
-                    />
-                    <div className="font-semibold text-sm text-zinc-900">
-                      {role.label}
-                    </div>
-                    <div className="text-xs text-zinc-500 mt-0.5">
-                      {role.description}
-                    </div>
-                    {selectedRole === role.value && (
-                      <CheckCircle className="absolute top-3 right-3 w-4 h-4 text-medical-600" />
-                    )}
-                  </button>
-                ))}
+              <div className="grid grid-cols-3 gap-3">
+                {ROLES.map((role) => {
+                  const isSelected = selectedRole === role.value;
+                  const selectedCls =
+                    role.color === "medical"
+                      ? "border-medical-500 bg-medical-50"
+                      : role.color === "violet"
+                      ? "border-violet-500 bg-violet-50"
+                      : "border-zinc-700 bg-zinc-50";
+                  const iconCls =
+                    isSelected
+                      ? role.color === "medical"
+                        ? "text-medical-600"
+                        : role.color === "violet"
+                        ? "text-violet-600"
+                        : "text-zinc-800"
+                      : "text-zinc-400";
+                  const checkCls =
+                    role.color === "medical"
+                      ? "text-medical-600"
+                      : role.color === "violet"
+                      ? "text-violet-600"
+                      : "text-zinc-700";
+                  return (
+                    <button
+                      key={role.value}
+                      type="button"
+                      onClick={() => setValue("role", role.value)}
+                      className={`relative p-4 rounded-xl border-2 text-left transition-all
+                        ${isSelected ? selectedCls : "border-zinc-200 hover:border-zinc-300"}`}
+                    >
+                      <role.icon className={`w-5 h-5 mb-2 ${iconCls}`} />
+                      <div className="font-semibold text-sm text-zinc-900">
+                        {role.label}
+                      </div>
+                      <div className="text-xs text-zinc-500 mt-0.5">
+                        {role.description}
+                      </div>
+                      {isSelected && (
+                        <CheckCircle className={`absolute top-3 right-3 w-4 h-4 ${checkCls}`} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

@@ -26,7 +26,7 @@ const RegisterSchema = z.object({
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
     .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
-  role: z.enum(["PATIENT", "DOCTOR"]).default("PATIENT"),
+  role: z.enum(["PATIENT", "DOCTOR", "SECRETARY"]).default("PATIENT"),
   speciality: z.string().optional(),
   inami: z.string().optional(),
 });

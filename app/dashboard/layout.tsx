@@ -59,6 +59,14 @@ function getNavLinks(role: Role): { href: string; label: string; icon: IconName 
     });
   }
 
+  if (role === Role.SECRETARY) {
+    common.splice(2, 0, {
+      href: "/dashboard/patients",
+      label: "Patients",
+      icon: "Users",
+    });
+  }
+
   return common;
 }
 

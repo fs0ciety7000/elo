@@ -61,21 +61,23 @@ export default async function PrescriptionDetailPage({
   if (!prescription) notFound();
 
   // Contrôle d'accès : le patient ne voit que ses propres prescriptions
-  if (
-    session.role === Role.PATIENT &&
-    prescription.patientId !== session.id
-  ) {
+  if (session.role === Role.PATIENT && prescription.patientId !== session.id) {
     redirect("/dashboard");
   }
 
-  const isDoctor = session.role === Role.DOCTOR || session.role === Role.ADMIN;
-  const canUpdateStatus = isDoctor;
+  // SECRETARY: can view and update status only
+  const canUpdateStatus =
+    session.role === Role.DOCTOR ||
+    session.role === Role.ADMIN ||
+    session.role === Role.SECRETARY;
 
-  // Peut modifier/supprimer : admin = tous, doctor = les siennes, patient = les siennes
+  // Peut modifier/supprimer le contenu : admin = tous, doctor = les siennes
   const canEdit =
     session.role === Role.ADMIN ||
-    (session.role === Role.DOCTOR && prescription.doctorId === session.id) ||
-    (session.role === Role.PATIENT && prescription.patientId === session.id);
+    (session.role === Role.DOCTOR && prescription.doctorId === session.id);
+
+  // Les notes du médecin sont masquées pour le patient
+  const canSeeNotes = session.role !== Role.PATIENT;
 
   return (
     <div className="p-8 max-w-4xl">
@@ -173,7 +175,7 @@ export default async function PrescriptionDetailPage({
                   <dd className="text-sm text-zinc-700 dark:text-zinc-300">{prescription.diagnosis}</dd>
                 </div>
               )}
-              {prescription.notes && (
+              {prescription.notes && canSeeNotes && (
                 <div>
                   <dt className="text-xs text-zinc-400 font-medium uppercase tracking-wide mb-1">
                     Notes

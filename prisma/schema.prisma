@@ -17,6 +17,7 @@ enum Role {
   ADMIN
   DOCTOR
   PATIENT
+  SECRETARY
 }
 
 // ── Enum des statuts de prescription ────────────────────────
