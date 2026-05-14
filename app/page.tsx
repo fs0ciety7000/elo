@@ -266,7 +266,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-zinc-500 text-sm">
             <Image src="/logo.svg" alt="HumaScan" width={16} height={16} />
-            <span>© 2024 HumaScan Medical SaaS — Travail de Fin d&apos;Études</span>
+            <span>© 2026 HumaScan Medical SaaS — Travail de Fin d&apos;Études</span>
           </div>
           <div className="text-xs text-zinc-400">
             Données hébergées en Europe · Conforme RGPD · Application médicale sécurisée
