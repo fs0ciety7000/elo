@@ -124,7 +124,7 @@ export async function registerUser(
 
     return {
       success: true,
-      message: "Compte créé avec succès ! Bienvenue sur Antigravity.",
+      message: "Compte créé avec succès ! Bienvenue sur HumaScan.",
     };
   } catch (error) {
     console.error("[registerUser] Erreur :", error);

@@ -1,11 +1,11 @@
 // ============================================================
-// Service Worker — Antigravity Medical PWA
+// Service Worker — HumaScan Medical PWA
 // v3 — Stratégie corrigée pour éviter les ChunkLoadError
 // après un déploiement (stale chunks)
 // ============================================================
 
 // Bump ce numéro à chaque déploiement pour vider le cache précédent
-const CACHE_VERSION = "antigravity-v3";
+const CACHE_VERSION = "HumaScan-v3";
 
 // Installation : skip waiting pour activer immédiatement
 self.addEventListener("install", () => {
@@ -70,7 +70,7 @@ self.addEventListener("push", (event) => {
   if (!event.data) return;
   const data = event.data.json();
   event.waitUntil(
-    self.registration.showNotification(data.title ?? "Antigravity Medical", {
+    self.registration.showNotification(data.title ?? "HumaScan Medical", {
       body: data.body ?? "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",

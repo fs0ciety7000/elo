@@ -1,5 +1,5 @@
 // ============================================================
-// Page de Connexion — Antigravity Medical SaaS
+// Page de Connexion — HumaScan Medical SaaS
 // Design SaaS premium avec validation Zod + React Hook Form
 // ============================================================
 
@@ -70,7 +70,7 @@ function LoginForm() {
               <Activity className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-zinc-900">
-              Antigravity<span className="text-medical-600"> Medical</span>
+              HumaScan<span className="text-medical-600"> Medical</span>
             </span>
           </Link>
         </div>

@@ -1,5 +1,5 @@
 // ============================================================
-// Utilitaires généraux — Antigravity Medical SaaS
+// Utilitaires généraux — HumaScan Medical SaaS
 // ============================================================
 
 import { type ClassValue, clsx } from "clsx";

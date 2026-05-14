@@ -1,5 +1,5 @@
 // ============================================================
-// Page Détail d'une Prescription — Antigravity Medical SaaS
+// Page Détail d'une Prescription — HumaScan Medical SaaS
 // Affiche le QR Code, les détails et permet la mise à jour du statut
 // ============================================================
 

@@ -1,5 +1,5 @@
 // ============================================================
-// Page Prescriptions / Rendez-vous — Antigravity Medical SaaS
+// Page Prescriptions / Rendez-vous — HumaScan Medical SaaS
 // ============================================================
 
 import { redirect } from "next/navigation";

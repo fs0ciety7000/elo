@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================================
-# Entrypoint Docker — Antigravity Medical SaaS
+# Entrypoint Docker — HumaScan Medical SaaS
 # Exécuté à chaque démarrage du conteneur :
 #   1. Migrations Prisma (idempotent)
 #   2. Seed initial si la base est vide
@@ -9,7 +9,7 @@
 
 set -e
 
-echo "🏥 Antigravity Medical — Démarrage..."
+echo "🏥 HumaScan Medical — Démarrage..."
 
 # ── 1. Synchronisation du schéma ────────────────────────────
 echo "📦 Synchronisation du schéma Prisma (db push)..."

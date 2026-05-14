@@ -1,6 +1,6 @@
 {
-  "name": "Antigravity Medical",
-  "short_name": "Antigravity",
+  "name": "HumaScan Medical",
+  "short_name": "HumaScan",
   "description": "Gestion de prescriptions médicales numériques",
   "start_url": "/dashboard",
   "display": "standalone",

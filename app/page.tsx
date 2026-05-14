@@ -1,5 +1,5 @@
 // ============================================================
-// Landing Page — Antigravity Medical SaaS
+// Landing Page — HumaScan Medical SaaS
 // Page publique présentant la plateforme
 // ============================================================
 
@@ -23,9 +23,9 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="Antigravity" width={32} height={32} className="rounded-lg" />
+            <Image src="/logo.svg" alt="HumaScan" width={32} height={32} className="rounded-lg" />
             <span className="font-display font-bold text-lg text-zinc-900">
-              Antigravity
+              HumaScan
               <span className="text-medical-600"> Medical</span>
             </span>
           </div>
@@ -265,8 +265,8 @@ export default function LandingPage() {
       <footer className="border-t border-zinc-100 py-8 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-zinc-500 text-sm">
-            <Image src="/logo.svg" alt="Antigravity" width={16} height={16} />
-            <span>© 2024 Antigravity Medical SaaS — Travail de Fin d&apos;Études</span>
+            <Image src="/logo.svg" alt="HumaScan" width={16} height={16} />
+            <span>© 2024 HumaScan Medical SaaS — Travail de Fin d&apos;Études</span>
           </div>
           <div className="text-xs text-zinc-400">
             Données hébergées en Europe · Conforme RGPD · Application médicale sécurisée

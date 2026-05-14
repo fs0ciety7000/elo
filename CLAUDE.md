@@ -1,4 +1,4 @@
-# CLAUDE.md — Antigravity Medical SaaS
+# CLAUDE.md — HumaScan Medical SaaS
 
 ## Présentation du projet
 

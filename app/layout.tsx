@@ -1,5 +1,5 @@
 // ============================================================
-// Layout racine — Antigravity Medical SaaS
+// Layout racine — HumaScan Medical SaaS
 // Applique les polices, métadonnées et la structure HTML de base
 // ============================================================
 
@@ -24,14 +24,14 @@ const outfit = Outfit({
 // ── Métadonnées SEO ──────────────────────────────────────────
 export const metadata: Metadata = {
   title: {
-    default: "Antigravity Medical | Prescriptions numériques",
-    template: "%s | Antigravity Medical",
+    default: "HumaScan Medical | Prescriptions numériques",
+    template: "%s | HumaScan Medical",
   },
   description:
     "Plateforme SaaS de digitalisation des prescriptions médicales et examens radiologiques. Sécurisée, rapide, conforme RGPD.",
   keywords: ["médical", "prescription", "radiologie", "OCR", "ordonnance numérique"],
-  authors: [{ name: "Antigravity Medical" }],
-  creator: "Antigravity Medical SaaS",
+  authors: [{ name: "HumaScan Medical" }],
+  creator: "HumaScan Medical SaaS",
   robots: {
     index: false,
     follow: false,
@@ -66,7 +66,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Antigravity" />
+        <meta name="apple-mobile-web-app-title" content="HumaScan" />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {children}

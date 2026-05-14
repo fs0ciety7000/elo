@@ -1,5 +1,5 @@
 // ============================================================
-// Page 404 — Antigravity Medical SaaS
+// Page 404 — HumaScan Medical SaaS
 // ============================================================
 
 import Link from "next/link";

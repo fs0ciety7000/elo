@@ -1,5 +1,5 @@
 // ============================================================
-// Utilitaires d'authentification — Antigravity Medical SaaS
+// Utilitaires d'authentification — HumaScan Medical SaaS
 // Gestion des tokens JWT avec la librairie jose (Edge-compatible)
 // ============================================================
 
@@ -9,7 +9,7 @@ import { Role } from "@prisma/client";
 
 // Durée de validité du token (24 heures)
 const TOKEN_EXPIRY = "24h";
-const COOKIE_NAME = "antigravity_session";
+const COOKIE_NAME = "HumaScan_session";
 
 // Charge la clé secrète depuis les variables d'environnement
 function getJwtSecret(): Uint8Array {
@@ -35,7 +35,7 @@ export async function signToken(payload: JWTPayload): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(TOKEN_EXPIRY)
-    .setIssuer("antigravity-medical")
+    .setIssuer("HumaScan-medical")
     .sign(getJwtSecret());
 }
 
@@ -43,7 +43,7 @@ export async function signToken(payload: JWTPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret(), {
-      issuer: "antigravity-medical",
+      issuer: "HumaScan-medical",
     });
     return payload as unknown as JWTPayload;
   } catch {

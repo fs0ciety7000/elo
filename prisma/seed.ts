@@ -23,7 +23,7 @@ async function main() {
   // Administrateur
   const admin = await prisma.user.create({
     data: {
-      email: "admin@antigravity.med",
+      email: "admin@HumaScan.med",
       password: hashedDemoPassword,
       firstName: "Admin",
       lastName: "Système",
@@ -34,7 +34,7 @@ async function main() {
   // Médecin (demo)
   const doctor = await prisma.user.create({
     data: {
-      email: "dr.martin@antigravity.med",
+      email: "dr.martin@HumaScan.med",
       password: hashedDemoPassword,
       firstName: "Sophie",
       lastName: "Martin",
@@ -132,8 +132,8 @@ async function main() {
 
   console.log("✅ Seed terminé avec succès !");
   console.log("📧 Comptes de démonstration (Demo1234!) :");
-  console.log(`   Admin    : admin@antigravity.med`);
-  console.log(`   Médecin  : dr.martin@antigravity.med`);
+  console.log(`   Admin    : admin@HumaScan.med`);
+  console.log(`   Médecin  : dr.martin@HumaScan.med`);
   console.log(`   Patient  : patient@exemple.com`);
   console.log("📧 Comptes de test (Topsecret86) :");
   console.log(`   Médecin  : docteur@test.com`);

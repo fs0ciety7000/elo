@@ -1,5 +1,5 @@
 // ============================================================
-// Dashboard principal — Antigravity Medical SaaS
+// Dashboard principal — HumaScan Medical SaaS
 // ============================================================
 
 import { redirect } from "next/navigation";

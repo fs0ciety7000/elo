@@ -1,5 +1,5 @@
 // ============================================================
-// Composant PDF — Prescription Antigravity Medical
+// Composant PDF — Prescription HumaScan Medical
 // Rendu serveur via @react-pdf/renderer
 // ============================================================
 
@@ -251,14 +251,14 @@ export function PrescriptionPdf({ prescription }: { prescription: PrescriptionDa
   return (
     <Document
       title={`Prescription — ${prescription.examType}`}
-      author="Antigravity Medical"
+      author="HumaScan Medical"
       subject="Prescription médicale"
     >
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.logoText}>Antigravity</Text>
+            <Text style={styles.logoText}>HumaScan</Text>
             <Text style={styles.logoSub}>Plateforme médicale numérique</Text>
           </View>
           <View style={styles.refBox}>
@@ -370,7 +370,7 @@ export function PrescriptionPdf({ prescription }: { prescription: PrescriptionDa
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>Antigravity Medical — Document confidentiel</Text>
+          <Text style={styles.footerText}>HumaScan Medical — Document confidentiel</Text>
           <Text style={styles.footerText}>
             Généré le {formatDateSimple(new Date())}
           </Text>

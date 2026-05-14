@@ -229,7 +229,7 @@ export async function updatePrescriptionStatus(
           patientName: `${prescription.patient.firstName} ${prescription.patient.lastName}`,
           doctorName: prescription.doctor
             ? `Dr. ${prescription.doctor.firstName} ${prescription.doctor.lastName}`
-            : "Antigravity Medical",
+            : "HumaScan Medical",
           examType: prescription.examType,
           prescriptionId: prescription.id,
           qrCode: prescription.qrCode,

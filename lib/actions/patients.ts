@@ -265,7 +265,7 @@ export async function createPatientAccount(
       ? `Dr. ${session.firstName} ${session.lastName}`
       : session.role === Role.SECRETARY
       ? `${session.firstName} ${session.lastName} (Secrétariat)`
-      : "Antigravity Medical";
+      : "HumaScan Medical";
     sendPatientAccountCreatedEmail(patient.email, {
       patientName: `${patient.firstName} ${patient.lastName}`,
       doctorName,

@@ -1,6 +1,6 @@
 // ============================================================
 // Service d'envoi d'emails — Resend API
-// Templates HTML professionnels avec logo Antigravity
+// Templates HTML professionnels avec logo HumaScan
 // ============================================================
 
 import { Resend } from "resend";
@@ -10,7 +10,7 @@ import { getBaseUrl } from "@/lib/utils";
 
 const resend   = new Resend(process.env.RESEND_API_KEY);
 const FROM     = process.env.RESEND_FROM_EMAIL ?? "noreply@elodie.fs0ciety.org";
-const APP_NAME = "Antigravity Medical";
+const APP_NAME = "HumaScan Medical";
 
 // ── Logo embarqué en base64 (80×80, fond blanc) ───────────────
 function getLogoBase64(): string {

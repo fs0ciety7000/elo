@@ -1,5 +1,5 @@
 // ============================================================
-// Page d'Inscription — Antigravity Medical SaaS
+// Page d'Inscription — HumaScan Medical SaaS
 // Design SaaS premium avec sélection de rôle (Patient / Médecin)
 // ============================================================
 
@@ -134,7 +134,7 @@ export default function RegisterPage() {
               <Activity className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-zinc-900">
-              Antigravity<span className="text-medical-600"> Medical</span>
+              HumaScan<span className="text-medical-600"> Medical</span>
             </span>
           </Link>
         </div>

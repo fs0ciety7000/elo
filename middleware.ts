@@ -1,5 +1,5 @@
 // ============================================================
-// Middleware de protection des routes — Antigravity Medical SaaS
+// Middleware de protection des routes — HumaScan Medical SaaS
 // S'exécute en Edge Runtime avant chaque requête correspondante
 // ============================================================
 
@@ -13,7 +13,7 @@ const PROTECTED_ROUTES = ["/dashboard", "/profile"];
 const AUTH_ROUTES = ["/login", "/register"];
 
 // Nom du cookie de session
-const COOKIE_NAME = "antigravity_session";
+const COOKIE_NAME = "HumaScan_session";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET ?? "fallback-secret-change-in-production";
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   if (token) {
     try {
       const { payload } = await jwtVerify(token, getJwtSecret(), {
-        issuer: "antigravity-medical",
+        issuer: "HumaScan-medical",
       });
       isAuthenticated = true;
       userRole = payload.role as string;

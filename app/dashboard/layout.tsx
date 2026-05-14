@@ -1,5 +1,5 @@
 // ============================================================
-// Layout du Dashboard — Antigravity Medical SaaS
+// Layout du Dashboard — HumaScan Medical SaaS
 // Barre de navigation latérale + header top avec info utilisateur
 // ============================================================
 
@@ -116,9 +116,9 @@ export default async function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="Antigravity" width={32} height={32} className="rounded-lg" />
+            <Image src="/logo.svg" alt="HumaScan" width={32} height={32} className="rounded-lg" />
             <span className="font-display font-bold text-base text-zinc-900 dark:text-zinc-100">
-              Antigravity
+              HumaScan
             </span>
           </Link>
         </div>

@@ -132,13 +132,13 @@ export async function GET(
   // ── Arbre PDF (React.createElement, pas de JSX) ────────────
   const ce = React.createElement;
 
-  const doc = ce(Document, { title: `Prescription — ${p.examType}`, author: "Antigravity Medical", subject: "Prescription médicale" },
+  const doc = ce(Document, { title: `Prescription — ${p.examType}`, author: "HumaScan Medical", subject: "Prescription médicale" },
     ce(Page, { size: "A4", style: styles.page },
 
       // En-tête
       ce(View, { style: styles.header },
         ce(View, null,
-          ce(Text, { style: styles.logoText }, "Antigravity"),
+          ce(Text, { style: styles.logoText }, "HumaScan"),
           ce(Text, { style: styles.logoSub }, "Plateforme médicale numérique"),
         ),
         ce(View, { style: styles.refBox },
@@ -201,7 +201,7 @@ export async function GET(
 
       // Pied de page
       ce(View, { style: styles.footer, fixed: true },
-        ce(Text, { style: styles.footerText }, "Antigravity Medical — Document confidentiel"),
+        ce(Text, { style: styles.footerText }, "HumaScan Medical — Document confidentiel"),
         ce(Text, { style: styles.footerText }, `Généré le ${fmt(new Date())}`),
       ),
     ),

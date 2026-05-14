@@ -44,7 +44,7 @@ export function MobileNav({ navLinks, userName, userRole }: Props) {
           <div className="w-7 h-7 rounded-lg gradient-medical flex items-center justify-center">
             <Activity className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="font-display font-bold text-sm text-zinc-900">Antigravity</span>
+          <span className="font-display font-bold text-sm text-zinc-900">HumaScan</span>
         </Link>
 
         <button

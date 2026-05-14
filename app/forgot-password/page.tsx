@@ -1,5 +1,5 @@
 // ============================================================
-// Page Mot de passe oublié — Antigravity Medical SaaS
+// Page Mot de passe oublié — HumaScan Medical SaaS
 // ============================================================
 
 "use client";
@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
               <Activity className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl text-zinc-900 dark:text-zinc-100">
-              Antigravity<span className="text-medical-600"> Medical</span>
+              HumaScan<span className="text-medical-600"> Medical</span>
             </span>
           </Link>
         </div>
