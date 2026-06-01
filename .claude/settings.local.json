@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npx prisma *)",
-      "Bash(export PATH=\"/var/home/phantomhex/.local/bin:$PATH\")"
+      "Bash(export PATH=\"/var/home/phantomhex/.local/bin:$PATH\")",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(cp \"/home/phantomhex/.claude/projects/-home-phantomhex-Documents-code-elo/28fbdef5-5d67-4ba0-a44b-ed0d0a846b4e/tool-results/webfetch-1780336069385-28fwme.bin\" /tmp/humascan_design.gz)",
+      "Bash(gunzip -f /tmp/humascan_design.gz)",
+      "Read(//tmp/**)",
+      "Bash(mkdir -p /tmp/humascan_extracted)",
+      "Bash(tar -xf /tmp/humascan_design -C /tmp/humascan_extracted)"
     ]
   }
 }
