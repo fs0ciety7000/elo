@@ -99,7 +99,7 @@ export default async function PrescriptionsPage({
             {isSecretary ? "Rendez-vous" : isDoctor ? "Prescriptions émises" : "Mes examens"}
           </h1>
           <p className="text-zinc-500 text-sm mt-1">
-            {sorted.length} {isSecretary ? "rendez-vous" : "prescription"}{sorted.length !== 1 ? "" : ""}
+            {sorted.length} {isSecretary ? "rendez-vous" : `prescription${sorted.length !== 1 ? "s" : ""}`}
           </p>
         </div>
 

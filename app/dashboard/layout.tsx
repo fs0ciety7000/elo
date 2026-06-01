@@ -175,7 +175,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* ── Contenu principal ── */}
-      <main className="flex-1 lg:ml-64 min-h-screen pt-14 lg:pt-0">
+      <main className="flex-1 lg:ml-64 min-h-screen pt-14 lg:pt-0 dark:[background:radial-gradient(ellipse_80%_40%_at_50%_-5%,rgba(29,78,216,0.06)_0%,transparent_100%),rgb(var(--zinc-950))]">
         {children}
       </main>
     </div>

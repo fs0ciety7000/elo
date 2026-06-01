@@ -25,28 +25,55 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
+
+    /* Zinc — valeurs par défaut Tailwind (canaux RGB séparés) */
+    --zinc-50:  250 250 250;
+    --zinc-100: 244 244 245;
+    --zinc-200: 228 228 231;
+    --zinc-300: 212 212 216;
+    --zinc-400: 161 161 170;
+    --zinc-500: 113 113 122;
+    --zinc-600:  82  82  91;
+    --zinc-700:  63  63  70;
+    --zinc-800:  39  39  42;
+    --zinc-900:  24  24  27;
+    --zinc-950:   9   9  11;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Palette navy profonde — reposante pour les yeux, esthétique tech */
+    --background: 216 35% 7%;
+    --foreground: 210 17% 91%;
+    --card: 215 22% 11%;
+    --card-foreground: 210 17% 91%;
+    --popover: 215 22% 11%;
+    --popover-foreground: 210 17% 91%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 215 18% 15%;
+    --secondary-foreground: 210 17% 80%;
+    --muted: 215 18% 15%;
+    --muted-foreground: 215 12% 57%;
+    --accent: 215 22% 17%;
+    --accent-foreground: 210 17% 91%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 16% 17%;
+    --input: 215 18% 13%;
+    --ring: 217 91% 60%;
+
+    /* Zinc — palette navy, jamais de noir pur */
+    --zinc-50:  240 244 248;   /* hover très subtil */
+    --zinc-100: 230 237 243;   /* texte primaire doux */
+    --zinc-200: 205 213 223;
+    --zinc-300: 176 186 201;
+    --zinc-400: 139 148 158;   /* texte secondaire — GitHub muted */
+    --zinc-500:  99 110 122;   /* texte très atténué */
+    --zinc-600:  66  77  92;
+    --zinc-700:  45  55  72;   /* bordures */
+    --zinc-800:  30  37  51;   /* surfaces secondaires / hover */
+    --zinc-900:  22  27  34;   /* sidebar / cartes */
+    --zinc-950:  13  17  23;   /* fond principal */
   }
 }
 
@@ -63,6 +90,11 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
   }
+
+  .dark ::selection {
+    background-color: rgba(59, 130, 246, 0.25);
+    color: rgb(230 237 243);
+  }
 }
 
 /* ── Utilitaires personnalisés ──────────────────────────────── */
@@ -71,17 +103,19 @@
     text-wrap: balance;
   }
 
-  /* Gradient médical signature */
   .gradient-medical {
     @apply bg-gradient-to-br from-medical-700 via-medical-600 to-medical-500;
   }
 
-  /* Card avec effet verre */
   .glass-card {
     @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-xl;
   }
 
-  /* Scrollbar personnalisée */
+  .dark .glass-card {
+    background-color: rgba(22, 27, 34, 0.85);
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -89,6 +123,22 @@
     @apply bg-transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-zinc-300 rounded-full;
+    @apply bg-zinc-300 dark:bg-zinc-700 rounded-full;
   }
+}
+
+/* ── Scrollbar globale en mode sombre ───────────────────────── */
+.dark ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--zinc-700));
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--zinc-600));
 }
