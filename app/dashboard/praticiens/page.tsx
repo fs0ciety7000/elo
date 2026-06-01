@@ -27,7 +27,7 @@ export default async function PraticiensPage() {
 
   // Récupérer les médecins assignés à ce patient
   const assignments = await prisma.doctorPatient.findMany({
-    where: { patientId: session.id },
+    where: { patientId: session.id, doctor: { role: Role.DOCTOR } },
     include: {
       doctor: {
         select: {
@@ -50,6 +50,7 @@ export default async function PraticiensPage() {
     where: {
       patientId: session.id,
       doctorId: { not: null },
+      doctor: { role: Role.DOCTOR },
     },
     include: {
       doctor: {
