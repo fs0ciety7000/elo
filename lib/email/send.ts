@@ -1,16 +1,43 @@
 // ============================================================
-// Service d'envoi d'emails — Resend API
+// Service d'envoi d'emails — SMTP (serveur mail.fs0ciety.org)
 // Templates HTML professionnels avec logo HumaScan
 // ============================================================
 
-import { Resend } from "resend";
+import nodemailer, { type Transporter } from "nodemailer";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { getBaseUrl } from "@/lib/utils";
 
-const resend   = new Resend(process.env.RESEND_API_KEY);
-const FROM     = process.env.RESEND_FROM_EMAIL ?? "noreply@elodie.fs0ciety.org";
-const APP_NAME = "HumaScan Medical";
+const APP_NAME      = "HumaScan Medical";
+const FROM          = process.env.SMTP_FROM ?? `${APP_NAME} <noreply@fs0ciety.org>`;
+const CONTACT_EMAIL = "contact@fs0ciety.org";
+
+// ── Transport SMTP (créé à la première utilisation) ───────────
+// Port 465 : TLS implicite ; sinon (587) : STARTTLS obligatoire.
+let transporter: Transporter | null = null;
+
+function getTransporter(): Transporter {
+  if (transporter) return transporter;
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  if (!host || !user || !pass) {
+    throw new Error("SMTP non configuré (SMTP_HOST, SMTP_USER, SMTP_PASSWORD requis)");
+  }
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    requireTLS: port !== 465,
+    auth: { user, pass },
+  });
+  return transporter;
+}
+
+async function sendMail(to: string, subject: string, html: string): Promise<void> {
+  await getTransporter().sendMail({ from: FROM, to, subject, html });
+}
 
 // ── Logo embarqué en base64 (80×80, fond blanc) ───────────────
 function getLogoBase64(): string {
@@ -62,7 +89,7 @@ function emailBase(content: string, subject: string): string {
         <tr>
           <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:24px 48px;text-align:center;">
             <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">${APP_NAME} — Plateforme de digitalisation des prescriptions médicales</p>
-            <p style="margin:0;font-size:11px;color:#cbd5e1;">Cet e-mail est généré automatiquement. Merci de ne pas y répondre.</p>
+            <p style="margin:0;font-size:11px;color:#cbd5e1;">Cet e-mail est généré automatiquement. Merci de ne pas y répondre — pour toute question : <a href="mailto:${CONTACT_EMAIL}" style="color:#94a3b8;">${CONTACT_EMAIL}</a></p>
           </td>
         </tr>
 
@@ -147,12 +174,7 @@ export async function sendWelcomeEmail(to: string, params: WelcomeParams | strin
     </p>
   `;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Bienvenue sur ${APP_NAME} 🏥`,
-    html: emailBase(content, `Bienvenue sur ${APP_NAME}`),
-  });
+  await sendMail(to, `Bienvenue sur ${APP_NAME} 🏥`, emailBase(content, `Bienvenue sur ${APP_NAME}`));
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -201,12 +223,7 @@ export async function sendPrescriptionEmail(to: string, p: PrescriptionEmailPara
     ${ctaButton("Voir ma prescription", url)}
   `;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Votre prescription "${p.examType}" est disponible`,
-    html: emailBase(content, "Nouvelle prescription médicale"),
-  });
+  await sendMail(to, `Votre prescription "${p.examType}" est disponible`, emailBase(content, "Nouvelle prescription médicale"));
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -275,12 +292,7 @@ export async function sendExamReminderEmail(to: string, p: ReminderEmailParams):
     ${ctaButton("Voir les détails de mon examen", url, "#059669")}
   `;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Rappel : votre examen "${p.examType}" — ${dateStr}`,
-    html: emailBase(content, "Rappel d'examen planifié"),
-  });
+  await sendMail(to, `Rappel : votre examen "${p.examType}" — ${dateStr}`, emailBase(content, "Rappel d'examen planifié"));
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -332,12 +344,7 @@ export async function sendPasswordResetEmail(to: string, p: PasswordResetParams)
     </p>
   `;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Réinitialisation de votre mot de passe — ${APP_NAME}`,
-    html: emailBase(content, "Réinitialisation du mot de passe"),
-  });
+  await sendMail(to, `Réinitialisation de votre mot de passe — ${APP_NAME}`, emailBase(content, "Réinitialisation du mot de passe"));
 }
 
 export async function sendPatientAccountCreatedEmail(to: string, p: PatientCreatedByDoctorParams): Promise<void> {
@@ -369,10 +376,5 @@ export async function sendPatientAccountCreatedEmail(to: string, p: PatientCreat
     ${ctaButton("Se connecter à mon espace", `${baseUrl}/login`)}
   `;
 
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `${p.doctorName} vous a créé un espace sur ${APP_NAME}`,
-    html: emailBase(content, "Votre espace patient est prêt"),
-  });
+  await sendMail(to, `${p.doctorName} vous a créé un espace sur ${APP_NAME}`, emailBase(content, "Votre espace patient est prêt"));
 }

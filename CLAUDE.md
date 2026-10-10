@@ -15,7 +15,7 @@ Application médicale SaaS permettant la gestion de patients, ordonnances et pre
 | Base de données | PostgreSQL 15 |
 | Auth | JWT custom (jose) + bcryptjs |
 | OCR | Anthropic Claude (`@anthropic-ai/sdk`) |
-| Mailing | Resend + React Email |
+| Mailing | SMTP (nodemailer) via `mail.fs0ciety.org` |
 | QR Code | qrcode.react |
 | Formulaires | react-hook-form + zod |
 | Déploiement | Docker + Coolify + Traefik |
@@ -66,7 +66,7 @@ lib/
 ├── auth.ts                   # Utilitaires JWT (session, cookies)
 ├── db.ts                     # Instance Prisma singleton
 ├── docx.ts                   # Génération de documents Word
-├── email/send.ts             # Envoi d'emails via Resend
+├── email/send.ts             # Envoi d'emails via SMTP (nodemailer)
 └── utils.ts                  # Helpers divers
 
 prisma/
@@ -105,8 +105,13 @@ POSTGRES_PASSWORD=...
 POSTGRES_DB=medical_db
 DATABASE_URL=postgresql://user:pass@postgres_db:5432/medical_db?schema=public
 
-RESEND_API_KEY=re_...               # Emails transactionnels
-RESEND_FROM_EMAIL=noreply@elodie.fs0ciety.org
+# Emails transactionnels (SMTP ; 465 = TLS implicite, 587 = STARTTLS)
+SMTP_HOST=mail.fs0ciety.org
+SMTP_PORT=587
+SMTP_USER=nicolas@fs0ciety.org
+SMTP_PASSWORD=...
+SMTP_FROM="HumaScan Medical <noreply@fs0ciety.org>"   # elodie.fs0ciety.org n'est pas sur le serveur mail
+# Contact public affiché : contact@fs0ciety.org
 
 SERVICE_FQDN_MEDICAL_APP=elodie.fs0ciety.org
 ```

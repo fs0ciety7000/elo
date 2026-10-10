@@ -269,7 +269,10 @@ export default function LandingPage() {
             <span>© 2026 HumaScan Medical SaaS — Travail de Fin d&apos;Études</span>
           </div>
           <div className="text-xs text-zinc-400">
-            Données hébergées en Europe · Conforme RGPD · Application médicale sécurisée
+            Données hébergées en Europe · Conforme RGPD · Application médicale sécurisée ·{" "}
+            <a href="mailto:contact@fs0ciety.org" className="hover:text-zinc-600 underline-offset-2 hover:underline">
+              contact@fs0ciety.org
+            </a>
           </div>
         </div>
       </footer>

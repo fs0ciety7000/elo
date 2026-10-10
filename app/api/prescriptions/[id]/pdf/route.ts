@@ -54,7 +54,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 // ── Styles ────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const styles = StyleSheet.create<any>({
   page:         { fontFamily: "OpenSans", fontWeight: "normal", fontSize: 10, paddingTop: 48, paddingBottom: 64, paddingHorizontal: 48, backgroundColor: "#ffffff", color: "#18181b" },
   header:       { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: "#e4e4e7" },
@@ -115,7 +114,6 @@ export async function GET(
   }
 
   const p = prescription;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdn = (p as any).prescribingDoctorName as string | null | undefined;
   const doctorLine = p.doctor
     ? `Dr. ${p.doctor.firstName} ${p.doctor.lastName}`
